@@ -8,8 +8,6 @@ import {
   PublicPageFallback,
 } from "./components/LoadingFallbacks";
 
-import * as Sentry from "@sentry/react";
-
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
@@ -49,28 +47,34 @@ function sanitizeUrl(url?: string) {
 }
 
 if (SENTRY_DSN) {
-  Sentry.init({
-    dsn: SENTRY_DSN,
-    integrations: [
-      Sentry.browserTracingIntegration(),
-      // Session Replay intentionally disabled — it records full screen video of users
-      // which requires explicit consent under NDPR/GDPR.
-    ],
-    tracesSampleRate: 0.2,
-    sendDefaultPii: false,
-    beforeSend(event) {
-      if (event.request?.url) {
-        event.request.url = sanitizeUrl(event.request.url);
-      }
-      return event;
-    },
-    beforeBreadcrumb(breadcrumb) {
-      if (breadcrumb.data?.url && typeof breadcrumb.data.url === "string") {
-        breadcrumb.data.url = sanitizeUrl(breadcrumb.data.url);
-      }
-      return breadcrumb;
-    },
-  });
+  void import("@sentry/react")
+    .then((Sentry) => {
+      Sentry.init({
+        dsn: SENTRY_DSN,
+        integrations: [
+          Sentry.browserTracingIntegration(),
+          // Session Replay intentionally disabled — it records full screen video of users
+          // which requires explicit consent under NDPR/GDPR.
+        ],
+        tracesSampleRate: 0.2,
+        sendDefaultPii: false,
+        beforeSend(event) {
+          if (event.request?.url) {
+            event.request.url = sanitizeUrl(event.request.url);
+          }
+          return event;
+        },
+        beforeBreadcrumb(breadcrumb) {
+          if (breadcrumb.data?.url && typeof breadcrumb.data.url === "string") {
+            breadcrumb.data.url = sanitizeUrl(breadcrumb.data.url);
+          }
+          return breadcrumb;
+        },
+      });
+    })
+    .catch(() => {
+      // Sentry must never block app startup in production.
+    });
 }
 
 function withSuspense(element: React.ReactNode, fallback: React.ReactNode) {
