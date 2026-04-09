@@ -22,29 +22,4 @@ export default defineConfig({
       },
     },
   },
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (!id.includes("node_modules")) {
-            return undefined
-          }
-
-          if (id.includes("recharts")) {
-            return "vendor-charts"
-          }
-
-          if (id.includes("@sentry")) {
-            return "vendor-sentry"
-          }
-
-          if (id.includes("react")) {
-            return "vendor-react"
-          }
-
-          return "vendor"
-        },
-      },
-    },
-  },
 })
