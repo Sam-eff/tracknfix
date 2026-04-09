@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: var(--color-primary);
+  --color-primary-dark: var(--color-primary-dark);
+  --color-secondary: var(--color-secondary);
+  --color-secondary-dark: var(--color-secondary-dark);
+  --color-accent: var(--color-accent);
+}
+
+@layer base {
+  :root {
+    --color-primary: #134e5e;
+    --color-primary-dark: #0f2027;
+    --color-accent: #71b280;
+    --color-secondary: #fceabb;
+    --color-secondary-dark: #fbb500;
+    --color-bg: #f8fafc;
+    --color-surface: #ffffff;
+    --color-border: #e2e8f0;
+    --color-text: #0f172a;
+    --color-muted: #64748b;
+    --color-sidebar: #ffffff;
+    --color-sidebar-text: #64748b;
+    --color-sidebar-border: #e2e8f0;
+  }
+
+  html.dark {
+    --color-bg: #0a0f1e;
+    --color-primary: #1e7b94;
+    --color-surface: #111827;
+    --color-border: #0d353f;
+    --color-text: #f1f5f9;
+    --color-muted: #64748b;
+    --color-sidebar: #0f172a;
+    --color-sidebar-text: #94a3b8;
+    --color-sidebar-border: transparent;
+  }
+
+  html {
+    scrollbar-gutter: stable;
+    background-color: var(--color-bg);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    font-family: 'DM Sans', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    transition: background-color 0.2s, color 0.2s;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #root {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  h1, h2, h3, h4, h5 {
+    font-family: 'Syne', 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+  }
+
+  /* Styling the calendar icon */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    filter: invert(0.5); /* Changes the icon color */
+    padding: 5px;
+    color: var(--color-text);
+  }
+}
+
+@layer utilities {
+  .bg-surface { background-color: var(--color-surface); }
+  .bg-app { background-color: var(--color-bg); }
+  .bg-sidebar { background-color: var(--color-sidebar); }
+  .text-app { color: var(--color-text); }
+  .text-muted { color: var(--color-muted); }
+  .text-sidebar { color: var(--color-sidebar-text); }
+  .border-app { border-color: var(--color-border); }
+  .ring-primary { --tw-ring-color: var(--color-primary); }
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+/* Ensure all input types have a consistent border — Tailwind Preflight resets
+   browser borders, but some UA stylesheets treat input[type="email"] etc.
+   differently and can cause the border to disappear. */
+@layer base {
+  input[type="email"],
+  input[type="text"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="search"],
+  textarea,
+  select {
+    border: 1px solid var(--color-border);
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    border-radius: 0.75rem;
+  }
+}

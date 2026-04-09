@@ -1,0 +1,117 @@
+services:
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_DB: techshop_db
+      POSTGRES_USER: techshop_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U techshop_user -d techshop_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    # No host port binding — DB is only accessible within Docker internal network
+    # Expose 5432 temporarily for local dev if needed: ports: ["127.0.0.1:5432:5432"]
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    # No host port binding — Redis is only accessible within Docker internal network
+    # Expose 6379 temporarily for local dev if needed: ports: ["127.0.0.1:6379:6379"]
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: techshopmananger-backend
+    command: >
+      sh -c "python manage.py collectstatic --noinput &&
+             python manage.py migrate &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3"
+    volumes:
+      - ./backend:/app
+      - media_files:/app/media
+    env_file:
+      - ./backend/.env
+    environment:
+      - SENTRY_DSN=${SENTRY_BACKEND_DSN}
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - DATABASE_URL=postgres://techshop_user:${DB_PASSWORD:?DB_PASSWORD is required}@db:5432/techshop_db
+      - REDIS_URL=redis://redis:6379/0
+      - CORS_ALLOWED_ORIGINS=http://localhost:5173
+      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,backend
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/', timeout=5).read()"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      - db
+      - redis
+
+  celery:
+    image: techshopmananger-backend
+    command: celery -A config worker -l info
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/.env
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - DATABASE_URL=postgres://techshop_user:${DB_PASSWORD:?DB_PASSWORD is required}@db:5432/techshop_db
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - backend
+      - redis
+
+  celery-beat:
+    image: techshopmananger-backend
+    command: celery -A config beat -l info
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/.env
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - DATABASE_URL=postgres://techshop_user:${DB_PASSWORD:?DB_PASSWORD is required}@db:5432/techshop_db
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - backend
+      - redis
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api/v1
+    ports:
+      - "80:80"  # Expose Nginx proxy to the host machine
+    volumes:
+      - media_files:/usr/share/nginx/media:ro  # Read-only access to media for Nginx
+    environment:
+      - VITE_SENTRY_DSN=${VITE_SENTRY_DSN}
+      - VITE_API_URL=/api/v1
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  media_files:
