@@ -5,8 +5,9 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
+# Added 'procps' so the script can manage background processes
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq-dev gcc \
+    libpq-dev gcc procps \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt requirements.txt
@@ -14,6 +15,12 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY . .
 
+# Copy and prepare the entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 EXPOSE 8000
 
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
+# Changed from CMD to ENTRYPOINT
+ENTRYPOINT ["/entrypoint.sh"]
+

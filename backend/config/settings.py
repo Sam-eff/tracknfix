@@ -253,6 +253,9 @@ REDIS_URL = env("REDIS_URL", default="redis://localhost:6379/0")
 CELERY_BROKER_URL = REDIS_URL
 CELERY_RESULT_BACKEND = REDIS_URL
 
+# Upstash requires this for SSL/TLS connections
+CELERY_REDIS_BACKEND_USE_SSL = {'ssl_cert_reqs': None} 
+
 #  Paystack
 
 PAYSTACK_SECRET_KEY = env("PAYSTACK_SECRET_KEY", default="")
