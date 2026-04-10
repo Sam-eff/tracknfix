@@ -12,9 +12,12 @@ declare module "axios" {
   }
 }
 
-const baseURL =
-  import.meta.env.VITE_API_URL ||
-  (typeof window !== "undefined" ? "/api/v1" : "http://localhost:8000/api/v1");
+// const baseURL =
+//   import.meta.env.VITE_API_URL ||
+//   (typeof window !== "undefined" ? "/api/v1" : "http://localhost:8000/api/v1");
+
+const baseURL = import.meta.env.VITE_API_URL;
+console.log("API URL:", baseURL);
 
 const api = axios.create({
   baseURL,
