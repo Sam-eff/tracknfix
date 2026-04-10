@@ -1,3 +1,12 @@
+---
+title: TracknFix Backend
+emoji: 🛠️
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+---
+
 # 🛠️ TracknFix
 
 > A full-stack SaaS point-of-sale and workshop management platform built for tech repair shops in Nigeria.
