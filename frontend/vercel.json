@@ -2,6 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
+      "source": "/api/v1/:path*",
+      "destination": "/api/proxy?path=:path*"
+    },
+    {
       "source": "/media/:path*",
       "destination": "https://sam-eff-tracknfix-backend.hf.space/media/:path*"
     },
