@@ -1,17 +1,17 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/v1/:path*",
-      "destination": "https://sam-eff-tracknfix-backend.hf.space/api/v1/:path*"
+      "src": "/api/v1/(.*)",
+      "dest": "https://sam-eff-tracknfix-backend.hf.space/api/v1/$1"
     },
     {
-      "source": "/media/:path*",
-      "destination": "https://sam-eff-tracknfix-backend.hf.space/media/:path*"
+      "src": "/media/(.*)",
+      "dest": "https://sam-eff-tracknfix-backend.hf.space/media/$1"
     },
     {
-      "source": "/((?!api/v1/|media/).*)",
-      "destination": "/index.html"
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
