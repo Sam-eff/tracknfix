@@ -250,11 +250,12 @@ CORS_ALLOW_CREDENTIALS = True
 #  Redis / Celery
 
 REDIS_URL = env("REDIS_URL", default="redis://localhost:6379/0")
-CELERY_BROKER_URL = REDIS_URL
-CELERY_RESULT_BACKEND = REDIS_URL
+CELERY_BROKER_URL = env('REDIS_URL')
+CELERY_RESULT_BACKEND = env('REDIS_URL')
 
 # Upstash requires this for SSL/TLS connections
-CELERY_REDIS_BACKEND_USE_SSL = {'ssl_cert_reqs': None} 
+CELERY_REDIS_BACKEND_USE_SSL = {'ssl_cert_reqs': 'none'}
+CELERY_BROKER_USE_SSL = {'ssl_cert_reqs': 'none'}
 
 #  Paystack
 

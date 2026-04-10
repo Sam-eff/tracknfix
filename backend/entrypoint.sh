@@ -13,7 +13,7 @@ python manage.py migrate --noinput
 python manage.py collectstatic --noinput
 
 # Start Gunicorn in the background
-gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 &
+gunicorn config.wsgi:application --bind 0.0.0.0:7860 --workers 2 &
 
 # Start Celery Worker in the background
 celery -A config worker -l info &

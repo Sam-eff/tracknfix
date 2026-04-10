@@ -19,7 +19,7 @@ COPY . .
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-EXPOSE 8000
+EXPOSE 7860
 
 # Changed from CMD to ENTRYPOINT
 ENTRYPOINT ["/entrypoint.sh"]
