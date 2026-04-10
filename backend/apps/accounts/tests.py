@@ -35,12 +35,13 @@ class AuthSecurityTests(APITestCase):
         csrf_client = APIClient(enforce_csrf_checks=True)
         csrf_cookie_response = csrf_client.get("/api/v1/auth/csrf/")
         self.assertEqual(csrf_cookie_response.status_code, status.HTTP_200_OK)
+        self.assertIn("csrfToken", csrf_cookie_response.data)
 
         response = csrf_client.post(
             "/api/v1/auth/login/",
             {"email": self.user.email, "password": "StrongPass123!"},
             format="json",
-            HTTP_X_CSRFTOKEN=csrf_cookie_response.cookies["csrftoken"].value,
+            HTTP_X_CSRFTOKEN=csrf_cookie_response.data["csrfToken"],
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -76,7 +77,7 @@ class AuthSecurityTests(APITestCase):
             "/api/v1/auth/forgot-password/",
             {"email": self.user.email},
             format="json",
-            HTTP_X_CSRFTOKEN=csrf_cookie_response.cookies["csrftoken"].value,
+            HTTP_X_CSRFTOKEN=csrf_cookie_response.data["csrfToken"],
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -96,12 +97,34 @@ class AuthSecurityTests(APITestCase):
                 "new_password": "FreshPass123!",
             },
             format="json",
-            HTTP_X_CSRFTOKEN=csrf_cookie_response.cookies["csrftoken"].value,
+            HTTP_X_CSRFTOKEN=csrf_cookie_response.data["csrfToken"],
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password("FreshPass123!"))
+
+    def test_refresh_alias_rotates_cookie_session(self):
+        csrf_client = APIClient(enforce_csrf_checks=True)
+        csrf_cookie_response = csrf_client.get("/api/v1/auth/csrf/")
+
+        login_response = csrf_client.post(
+            "/api/v1/auth/login/",
+            {"email": self.user.email, "password": "StrongPass123!"},
+            format="json",
+            HTTP_X_CSRFTOKEN=csrf_cookie_response.data["csrfToken"],
+        )
+        self.assertEqual(login_response.status_code, status.HTTP_200_OK)
+
+        refresh_response = csrf_client.post(
+            "/api/v1/auth/refresh/",
+            {},
+            format="json",
+            HTTP_X_CSRFTOKEN=csrf_cookie_response.data["csrfToken"],
+        )
+
+        self.assertEqual(refresh_response.status_code, status.HTTP_200_OK)
+        self.assertIn(settings.AUTH_COOKIE_ACCESS, refresh_response.cookies)
 
     def test_me_exposes_trial_access_as_pro_trial(self):
         self.client.force_authenticate(user=self.user)

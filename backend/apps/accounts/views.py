@@ -44,7 +44,9 @@ def enforce_csrf(request):
 
 
 def prime_csrf_cookie(request, response):
-    get_token(request)
+    token = get_token(request)
+    if isinstance(getattr(response, "data", None), dict) and "csrfToken" not in response.data:
+        response.data["csrfToken"] = token
     return response
 
 
@@ -170,7 +172,10 @@ class CsrfCookieView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        return Response({"message": "CSRF cookie set."}, status=status.HTTP_200_OK)
+        return prime_csrf_cookie(
+            request,
+            Response({"message": "CSRF cookie set."}, status=status.HTTP_200_OK),
+        )
 
 
 class CookieTokenRefreshView(APIView):

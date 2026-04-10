@@ -25,8 +25,6 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
   withCredentials: true,
-  xsrfCookieName: "csrftoken",
-  xsrfHeaderName: "X-CSRFToken",
 });
 
 const csrfClient = axios.create({
@@ -35,56 +33,42 @@ const csrfClient = axios.create({
     "Content-Type": "application/json",
   },
   withCredentials: true,
-  xsrfCookieName: "csrftoken",
-  xsrfHeaderName: "X-CSRFToken",
 });
 
 const isPublicRoute = (path: string) =>
   ["/login", "/register", "/forgot-password", "/reset-password"].some((route) => path.startsWith(route));
 
 let refreshPromise: Promise<void> | null = null;
-let csrfPromise: Promise<void> | null = null;
+let csrfPromise: Promise<string> | null = null;
+let csrfToken = "";
 
-const getCookieValue = (name: string) => {
-  if (typeof document === "undefined") {
+const fetchCsrfToken = async () => {
+  if (typeof window === "undefined") {
     return "";
-  }
-
-  const prefix = `${name}=`;
-  const cookie = document.cookie
-    .split("; ")
-    .find((entry) => entry.startsWith(prefix));
-
-  return cookie ? decodeURIComponent(cookie.slice(prefix.length)) : "";
-};
-
-const hasCsrfCookie = () =>
-  typeof document !== "undefined" &&
-  document.cookie.split("; ").some((cookie) => cookie.startsWith("csrftoken="));
-
-const ensureCsrfCookie = async () => {
-  if (typeof window === "undefined" || hasCsrfCookie()) {
-    return;
   }
 
   if (!csrfPromise) {
     csrfPromise = csrfClient
       .get("/auth/csrf/", { skipAuthRedirect: true })
-      .then(() => undefined)
+      .then(({ data }) => {
+        csrfToken = typeof data?.csrfToken === "string" ? data.csrfToken : "";
+        return csrfToken;
+      })
       .finally(() => {
         csrfPromise = null;
       });
   }
 
-  await csrfPromise;
+  return csrfPromise;
 };
 
 api.interceptors.request.use(async (config) => {
   const method = (config.method || "get").toUpperCase();
   if (!["GET", "HEAD", "OPTIONS", "TRACE"].includes(method)) {
-    await ensureCsrfCookie();
+    if (!csrfToken) {
+      await fetchCsrfToken();
+    }
 
-    const csrfToken = getCookieValue("csrftoken");
     if (csrfToken) {
       if (typeof config.headers?.set === "function") {
         config.headers.set("X-CSRFToken", csrfToken);
@@ -100,25 +84,45 @@ api.interceptors.request.use(async (config) => {
 });
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (typeof response.data?.csrfToken === "string") {
+      csrfToken = response.data.csrfToken;
+    }
+    return response;
+  },
   async (error: AxiosError) => {
+    if (typeof error.response?.data === "object" && error.response?.data && "csrfToken" in error.response.data) {
+      const nextToken = (error.response.data as { csrfToken?: unknown }).csrfToken;
+      if (typeof nextToken === "string") {
+        csrfToken = nextToken;
+      }
+    }
+
     const original = error.config;
     const requestPath = original?.url || "";
 
     const isRefreshRequest = requestPath.includes("/auth/token/refresh/");
+    const isCookieRefreshRequest = requestPath.includes("/auth/refresh/");
     const isPublicAuthRequest =
       requestPath.includes("/auth/login/") ||
       requestPath.includes("/auth/register/") ||
       requestPath.includes("/auth/forgot-password/") ||
       requestPath.includes("/auth/reset-password/");
 
-    if (error.response?.status === 401 && original && !original._retry && !isRefreshRequest && !isPublicAuthRequest) {
+    if (
+      error.response?.status === 401 &&
+      original &&
+      !original._retry &&
+      !isRefreshRequest &&
+      !isCookieRefreshRequest &&
+      !isPublicAuthRequest
+    ) {
       original._retry = true;
 
       try {
         if (!refreshPromise) {
           refreshPromise = api
-            .post("/auth/token/refresh/", null, { skipAuthRedirect: true })
+            .post("/auth/refresh/", null, { skipAuthRedirect: true })
             .then(() => undefined)
             .finally(() => {
               refreshPromise = null;

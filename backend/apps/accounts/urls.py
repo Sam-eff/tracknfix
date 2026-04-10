@@ -18,6 +18,7 @@ urlpatterns = [
     path("csrf/", CsrfCookieView.as_view(), name="csrf-cookie"),
     path("register/", ShopRegisterView.as_view(), name="shop-register"),
     path("login/", LoginView.as_view(), name="token-obtain"),
+    path("refresh/", CookieTokenRefreshView.as_view(), name="refresh"),
     path("token/refresh/", CookieTokenRefreshView.as_view(), name="token-refresh"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("me/", MeView.as_view(), name="me"),

@@ -6,8 +6,8 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 class CookieJWTAuthentication(JWTAuthentication):
     """
-    Prefer standard Bearer headers, but fall back to the signed HttpOnly cookie
-    used by the web frontend.
+    Authenticate exclusively from the signed HttpOnly access-token cookie used
+    by the web frontend.
     """
 
     def enforce_csrf(self, request):
@@ -18,10 +18,6 @@ class CookieJWTAuthentication(JWTAuthentication):
             raise exceptions.PermissionDenied(f"CSRF Failed: {reason}")
 
     def authenticate(self, request):
-        header = self.get_header(request)
-        if header is not None:
-            return super().authenticate(request)
-
         raw_token = request.COOKIES.get(settings.AUTH_COOKIE_ACCESS)
         if not raw_token:
             return None

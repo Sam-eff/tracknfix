@@ -101,8 +101,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -225,14 +225,16 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
-    "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
 AUTH_COOKIE_ACCESS = env("AUTH_COOKIE_ACCESS", default="tracknfix_access")
 AUTH_COOKIE_REFRESH = env("AUTH_COOKIE_REFRESH", default="tracknfix_refresh")
 AUTH_COOKIE_SECURE = env.bool("AUTH_COOKIE_SECURE", default=False)
-AUTH_COOKIE_SAMESITE = env("AUTH_COOKIE_SAMESITE", default="Lax")
+AUTH_COOKIE_SAMESITE = env("AUTH_COOKIE_SAMESITE", default="")
 AUTH_COOKIE_DOMAIN = env("AUTH_COOKIE_DOMAIN", default=None)
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = env("CSRF_COOKIE_SAMESITE", default="")
+SESSION_COOKIE_SAMESITE = env("SESSION_COOKIE_SAMESITE", default="")
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
 
@@ -241,10 +243,7 @@ CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
 #  Cors
 
-CORS_ALLOWED_ORIGINS = env.list(
-    "CORS_ALLOWED_ORIGINS",
-    default=["http://localhost:3000", "http://localhost:5173"],
-)
+CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
 CORS_ALLOW_CREDENTIALS = True
 
 #  Redis / Celery
@@ -330,8 +329,28 @@ if not CSRF_TRUSTED_ORIGINS:
             }
         )
     CSRF_TRUSTED_ORIGINS = sorted(origin for origin in csrf_defaults if origin)
+if not CORS_ALLOWED_ORIGINS:
+    cors_defaults = {
+        FRONTEND_URL.rstrip("/"),
+    }
+    if not USE_HTTPS:
+        cors_defaults.update(
+            {
+                "http://localhost:3000",
+                "http://127.0.0.1:3000",
+                "http://localhost:5173",
+                "http://127.0.0.1:5173",
+            }
+        )
+    CORS_ALLOWED_ORIGINS = sorted(origin for origin in cors_defaults if origin)
 if not env("AUTH_COOKIE_SECURE", default="").strip():
     AUTH_COOKIE_SECURE = USE_HTTPS
+if not AUTH_COOKIE_SAMESITE:
+    AUTH_COOKIE_SAMESITE = "None" if AUTH_COOKIE_SECURE else "Lax"
+if not CSRF_COOKIE_SAMESITE:
+    CSRF_COOKIE_SAMESITE = "None" if USE_HTTPS else "Lax"
+if not SESSION_COOKIE_SAMESITE:
+    SESSION_COOKIE_SAMESITE = "None" if USE_HTTPS else "Lax"
 if USE_HTTPS:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_HSTS_SECONDS = 31536000
@@ -345,6 +364,9 @@ if USE_HTTPS:
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = "DENY"
+else:
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
 
 # ── Content Security Policy (mitigates XSS token theft) ──────────────────────
 # Controls which scripts/resources browsers are allowed to load.
