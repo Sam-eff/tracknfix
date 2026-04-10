@@ -8,6 +8,9 @@
       "source": "/media/:path*",
       "destination": "https://sam-eff-tracknfix-backend.hf.space/media/:path*"
     },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "^/(?!api/v1(?:/.*)?$)(?!media(?:/.*)?$)(.*)$",
+      "destination": "/index.html"
+    }
   ]
 }
