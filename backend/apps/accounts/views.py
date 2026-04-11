@@ -45,9 +45,7 @@ def enforce_csrf(request):
 
 
 def prime_csrf_cookie(request, response):
-    token = get_token(request)
-    if isinstance(getattr(response, "data", None), dict) and "csrfToken" not in response.data:
-        response.data["csrfToken"] = token
+    get_token(request)
     return response
 
 

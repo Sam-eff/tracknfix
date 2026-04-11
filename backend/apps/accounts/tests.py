@@ -36,13 +36,14 @@ class AuthSecurityTests(APITestCase):
         csrf_client = APIClient(enforce_csrf_checks=True)
         csrf_cookie_response = csrf_client.get("/api/v1/auth/csrf/")
         self.assertEqual(csrf_cookie_response.status_code, status.HTTP_200_OK)
-        self.assertIn("csrfToken", csrf_cookie_response.data)
+        csrf_token = csrf_client.cookies.get("csrftoken")
+        self.assertIsNotNone(csrf_token)
 
         response = csrf_client.post(
             "/api/v1/auth/login/",
             {"email": self.user.email, "password": "StrongPass123!"},
             format="json",
-            HTTP_X_CSRFTOKEN=csrf_cookie_response.data["csrfToken"],
+            HTTP_X_CSRFTOKEN=csrf_token.value,
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -72,13 +73,14 @@ class AuthSecurityTests(APITestCase):
     @patch("apps.accounts.views.send_mail", side_effect=Exception("smtp down"))
     def test_forgot_password_returns_200_even_if_email_send_fails(self, _mock_send_mail):
         csrf_client = APIClient(enforce_csrf_checks=True)
-        csrf_cookie_response = csrf_client.get("/api/v1/auth/csrf/")
+        csrf_client.get("/api/v1/auth/csrf/")
+        csrf_token = csrf_client.cookies.get("csrftoken")
 
         response = csrf_client.post(
             "/api/v1/auth/forgot-password/",
             {"email": self.user.email},
             format="json",
-            HTTP_X_CSRFTOKEN=csrf_cookie_response.data["csrfToken"],
+            HTTP_X_CSRFTOKEN=csrf_token.value,
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -86,7 +88,8 @@ class AuthSecurityTests(APITestCase):
 
     def test_reset_password_accepts_fresh_valid_token(self):
         csrf_client = APIClient(enforce_csrf_checks=True)
-        csrf_cookie_response = csrf_client.get("/api/v1/auth/csrf/")
+        csrf_client.get("/api/v1/auth/csrf/")
+        csrf_token = csrf_client.cookies.get("csrftoken")
         uid = urlsafe_base64_encode(force_bytes(self.user.pk))
         token = default_token_generator.make_token(self.user)
 
@@ -98,7 +101,7 @@ class AuthSecurityTests(APITestCase):
                 "new_password": "FreshPass123!",
             },
             format="json",
-            HTTP_X_CSRFTOKEN=csrf_cookie_response.data["csrfToken"],
+            HTTP_X_CSRFTOKEN=csrf_token.value,
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -107,13 +110,14 @@ class AuthSecurityTests(APITestCase):
 
     def test_refresh_alias_rotates_cookie_session(self):
         csrf_client = APIClient(enforce_csrf_checks=True)
-        csrf_cookie_response = csrf_client.get("/api/v1/auth/csrf/")
+        csrf_client.get("/api/v1/auth/csrf/")
+        csrf_token = csrf_client.cookies.get("csrftoken")
 
         login_response = csrf_client.post(
             "/api/v1/auth/login/",
             {"email": self.user.email, "password": "StrongPass123!"},
             format="json",
-            HTTP_X_CSRFTOKEN=csrf_cookie_response.data["csrfToken"],
+            HTTP_X_CSRFTOKEN=csrf_token.value,
         )
         self.assertEqual(login_response.status_code, status.HTTP_200_OK)
 
@@ -121,7 +125,7 @@ class AuthSecurityTests(APITestCase):
             "/api/v1/auth/refresh/",
             {},
             format="json",
-            HTTP_X_CSRFTOKEN=csrf_cookie_response.data["csrfToken"],
+            HTTP_X_CSRFTOKEN=csrf_token.value,
         )
 
         self.assertEqual(refresh_response.status_code, status.HTTP_200_OK)

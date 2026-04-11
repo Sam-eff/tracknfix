@@ -12,9 +12,7 @@ declare module "axios" {
   }
 }
 
-const baseURL =
-  import.meta.env.VITE_API_URL ||
-  (typeof window !== "undefined" ? "/api/v1" : "http://127.0.0.1:8000/api/v1");
+const baseURL = "/api/v1";
 
 const api = axios.create({
   baseURL,
@@ -36,35 +34,42 @@ const isPublicRoute = (path: string) =>
   ["/login", "/register", "/forgot-password", "/reset-password"].some((route) => path.startsWith(route));
 
 let refreshPromise: Promise<void> | null = null;
-let csrfPromise: Promise<string> | null = null;
-let csrfToken = "";
+let csrfPromise: Promise<void> | null = null;
+
+const getCookie = (name: string) => {
+  if (typeof document === "undefined") {
+    return "";
+  }
+
+  const cookie = document.cookie
+    .split("; ")
+    .find((item) => item.startsWith(`${name}=`));
+
+  return cookie ? decodeURIComponent(cookie.split("=").slice(1).join("=")) : "";
+};
 
 const fetchCsrfToken = async () => {
   if (typeof window === "undefined") {
-    return "";
+    return;
   }
 
   if (!csrfPromise) {
     csrfPromise = csrfClient
       .get("/auth/csrf/", { skipAuthRedirect: true })
-      .then(({ data }) => {
-        csrfToken = typeof data?.csrfToken === "string" ? data.csrfToken : "";
-        return csrfToken;
-      })
+      .then(() => undefined)
       .finally(() => {
         csrfPromise = null;
       });
   }
 
-  return csrfPromise;
+  await csrfPromise;
 };
 
 api.interceptors.request.use(async (config) => {
   const method = (config.method || "get").toUpperCase();
   if (!["GET", "HEAD", "OPTIONS", "TRACE"].includes(method)) {
-    if (!csrfToken) {
-      await fetchCsrfToken();
-    }
+    await fetchCsrfToken();
+    const csrfToken = getCookie("csrftoken");
 
     if (csrfToken) {
       if (typeof config.headers?.set === "function") {
@@ -81,20 +86,8 @@ api.interceptors.request.use(async (config) => {
 });
 
 api.interceptors.response.use(
-  (response) => {
-    if (typeof response.data?.csrfToken === "string") {
-      csrfToken = response.data.csrfToken;
-    }
-    return response;
-  },
+  (response) => response,
   async (error: AxiosError) => {
-    if (typeof error.response?.data === "object" && error.response?.data && "csrfToken" in error.response.data) {
-      const nextToken = (error.response.data as { csrfToken?: unknown }).csrfToken;
-      if (typeof nextToken === "string") {
-        csrfToken = nextToken;
-      }
-    }
-
     const original = error.config;
     const requestPath = original?.url || "";
 
