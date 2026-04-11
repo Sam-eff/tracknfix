@@ -2,6 +2,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from django.conf import settings
+from django.test import override_settings
 from django.utils import timezone
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
@@ -125,6 +126,37 @@ class AuthSecurityTests(APITestCase):
 
         self.assertEqual(refresh_response.status_code, status.HTTP_200_OK)
         self.assertIn(settings.AUTH_COOKIE_ACCESS, refresh_response.cookies)
+
+    @override_settings(BOOTSTRAP_ADMIN_TOKEN="bootstrap-secret")
+    def test_bootstrap_admin_creates_first_superuser_once(self):
+        response = self.client.post(
+            "/api/v1/auth/bootstrap-admin/",
+            {
+                "bootstrap_token": "bootstrap-secret",
+                "email": "owner@tracknfix.com",
+                "first_name": "Root",
+                "last_name": "Admin",
+                "password": "StrongPass123!",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(CustomUser.objects.filter(email="owner@tracknfix.com", is_superuser=True).exists())
+
+        second_response = self.client.post(
+            "/api/v1/auth/bootstrap-admin/",
+            {
+                "bootstrap_token": "bootstrap-secret",
+                "email": "owner2@tracknfix.com",
+                "first_name": "Another",
+                "last_name": "Admin",
+                "password": "StrongPass123!",
+            },
+            format="json",
+        )
+
+        self.assertEqual(second_response.status_code, status.HTTP_409_CONFLICT)
 
     def test_me_exposes_trial_access_as_pro_trial(self):
         self.client.force_authenticate(user=self.user)

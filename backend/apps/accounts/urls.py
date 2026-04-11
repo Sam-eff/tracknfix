@@ -12,9 +12,11 @@ from .views import (
     ForgotPasswordView,
     ResetPasswordView,
     AdminResetStaffPasswordView,
+    BootstrapAdminView,
 )
 
 urlpatterns = [
+    path("bootstrap-admin/", BootstrapAdminView.as_view(), name="bootstrap-admin"),
     path("csrf/", CsrfCookieView.as_view(), name="csrf-cookie"),
     path("register/", ShopRegisterView.as_view(), name="shop-register"),
     path("login/", LoginView.as_view(), name="token-obtain"),

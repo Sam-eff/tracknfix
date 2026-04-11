@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/api/v1/:path*",
+      "destination": "https://sam-eff-tracknfix-backend.hf.space/api/v1/:path*"
+    },
+    {
+      "source": "/media/:path*",
+      "destination": "https://sam-eff-tracknfix-backend.hf.space/media/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

@@ -3,6 +3,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email
+from hmac import compare_digest
 from django.middleware.csrf import get_token
 from django.utils.decorators import method_decorator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -446,3 +447,72 @@ class AdminResetStaffPasswordView(APIView):
         staff.set_password(new_password)
         staff.save()
         return Response({"message": f"Password for {staff.get_full_name()} has been reset."})
+
+
+class BootstrapAdminView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        configured_token = settings.BOOTSTRAP_ADMIN_TOKEN.strip()
+        if not configured_token:
+            return Response(
+                {"error": "Bootstrap admin endpoint is disabled."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        provided_token = (
+            request.headers.get("X-Bootstrap-Token")
+            or request.data.get("bootstrap_token", "")
+        ).strip()
+
+        if not provided_token or not compare_digest(provided_token, configured_token):
+            return Response(
+                {"error": "Invalid bootstrap token."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if User.objects.filter(is_superuser=True).exists():
+            return Response(
+                {"error": "A superuser already exists. Disable this endpoint now."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        email = request.data.get("email", "").strip().lower()
+        first_name = request.data.get("first_name", "").strip()
+        last_name = request.data.get("last_name", "").strip()
+        password = request.data.get("password", "")
+
+        if not email or not first_name or not last_name or not password:
+            return Response(
+                {"error": "email, first_name, last_name and password are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            validate_email(email)
+        except DjangoValidationError:
+            return Response(
+                {"error": "Enter a valid email address."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        password_error = enforce_password_policy(password)
+        if password_error:
+            return password_error
+
+        user = User.objects.create_superuser(
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+        )
+
+        return Response(
+            {
+                "message": (
+                    "Production admin created successfully. Remove BOOTSTRAP_ADMIN_TOKEN now."
+                ),
+                "email": user.email,
+            },
+            status=status.HTTP_201_CREATED,
+        )
