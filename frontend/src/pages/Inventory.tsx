@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
@@ -9,6 +9,7 @@ import ConfirmModal from "../components/ConfirmModal";
 import BarcodeScannerNotice from "../components/BarcodeScannerNotice";
 import { useBarcodeScanner } from "../hooks/useBarcodeScanner";
 import { resolveAssetUrl } from "../utils/assets";
+import { getApiErrorMessage, getPrimaryErrorMessage, parseApiErrors } from "../utils/http";
 
 // ── Stock Log type ────────────────────────────────────────────────────────────
 interface StockLog {
@@ -127,7 +128,9 @@ export default function Inventory() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [categoryFilter, setCategoryFilter] = useState("");
 
   // Modals
@@ -153,36 +156,55 @@ export default function Inventory() {
   const [count, setCount] = useState(0);
   const [summary, setSummary] = useState({ total_value: 0, total_cost: 0 });
 
-  const fetchAll = async () => {
-    setLoading(true);
+  const fetchSummary = async () => {
     try {
-      const [prodRes, catRes, sumRes] = await Promise.all([
-        api.get("/inventory/products/", {
-          params: { search, category: categoryFilter, page },
-        }),
-        api.get("/inventory/categories/"),
-        api.get("/inventory/products/summary/"),
-      ]);
+      const { data } = await api.get("/inventory/products/summary/");
+      setSummary(data);
+    } catch {
+      // keep the last known summary if refresh fails
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const { data } = await api.get("/inventory/categories/");
+      setCategories(data.results || data);
+    } catch {
+      // keep the last known categories if refresh fails
+    }
+  };
+
+  const fetchProducts = async (mode: "initial" | "refresh" = "initial") => {
+    if (mode === "initial" || products.length === 0) {
+      setLoading(true);
+    } else {
+      setRefreshing(true);
+    }
+    try {
+      const prodRes = await api.get("/inventory/products/", {
+        params: { search: deferredSearch, category: categoryFilter, page },
+      });
       setProducts(prodRes.data.results || prodRes.data);
       setCount(prodRes.data.count || 0);
-      setCategories(catRes.data.results || catRes.data);
-      setSummary(sumRes.data);
     } catch {
       error("Failed to fetch products.");
     } finally {
       setLoading(false);
-    }
-
-    // Fetch shop permissions separately so it doesn't block the product list
-    try {
-      const shopRes = await api.get("/shops/");
-      setStaffCanManage(shopRes.data.allow_staff_inventory_management === true);
-    } catch {
-      // Silently fail — default is no access
+      setRefreshing(false);
     }
   };
 
-  useEffect(() => { fetchAll(); }, [search, categoryFilter, page]);
+  useEffect(() => { fetchProducts(products.length === 0 ? "initial" : "refresh"); }, [deferredSearch, categoryFilter, page]);
+
+  useEffect(() => {
+    api.get("/shops/")
+      .then(({ data }) => setStaffCanManage(data.allow_staff_inventory_management === true))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    void Promise.all([fetchCategories(), fetchSummary()]);
+  }, []);
 
   // Reset to page 1 when filters change
   useEffect(() => { setPage(1); }, [search, categoryFilter]);
@@ -270,6 +292,7 @@ export default function Inventory() {
   setFormErrors({});
   try {
     let categoryId = productForm.category || null;
+    let createdCategory: Category | null = null;
 
     // If user typed a new category, create it first
     if (productForm.new_category.trim()) {
@@ -277,6 +300,7 @@ export default function Inventory() {
         name: productForm.new_category.trim(),
       });
       categoryId = catRes.data.id;
+      createdCategory = catRes.data;
     }
 
     const formData = new FormData();
@@ -296,29 +320,42 @@ export default function Inventory() {
       formData.append("image", productForm.image);
     }
 
+    if (createdCategory) {
+      setCategories((prev) => {
+        if (prev.some((category) => category.id === createdCategory?.id)) return prev;
+        return [...prev, createdCategory].sort((a, b) => a.name.localeCompare(b.name));
+      });
+    }
+
+    const { data: savedProduct } = editingProduct
+      ? await api.put(`/inventory/products/${editingProduct.id}/`, formData, { headers: { "Content-Type": "multipart/form-data" }})
+      : await api.post("/inventory/products/", formData, { headers: { "Content-Type": "multipart/form-data" }});
+
     if (editingProduct) {
-      await api.put(`/inventory/products/${editingProduct.id}/`, formData, { headers: { "Content-Type": "multipart/form-data" }});
+      if (deferredSearch.trim() || categoryFilter) {
+        void fetchProducts("refresh");
+      } else {
+        setProducts((prev) => prev.map((product) => (product.id === savedProduct.id ? savedProduct : product)));
+      }
+    } else if (page === 1 && !deferredSearch.trim() && !categoryFilter) {
+      setProducts((prev) => {
+        const next = [savedProduct, ...prev.filter((product) => product.id !== savedProduct.id)];
+        return prev.length > 0 ? next.slice(0, prev.length) : next;
+      });
+      setCount((prev) => prev + 1);
     } else {
-      await api.post("/inventory/products/", formData, { headers: { "Content-Type": "multipart/form-data" }});
+      void fetchProducts("refresh");
     }
 
     setShowAddProduct(false);
     setEditingProduct(null);
     setProductForm(emptyForm);
     success(editingProduct ? "Product updated successfully!" : "Product added successfully!");
-    fetchAll();
-  } catch (err: any) {
-    const detail = err.response?.data?.details || err.response?.data;
-    if (detail && typeof detail === "object") {
-      const mapped: Record<string, string> = {};
-      for (const key in detail) {
-        mapped[key] = Array.isArray(detail[key]) ? detail[key][0] : detail[key];
-      }
-      setFormErrors(mapped);
-      if (mapped.non_field_errors || mapped.detail) {
-        error(mapped.non_field_errors || mapped.detail);
-      }
-    }
+    void fetchSummary();
+  } catch (err: unknown) {
+    const parsed = parseApiErrors(err, editingProduct ? "Failed to update product." : "Failed to add product.");
+    setFormErrors(parsed.fieldErrors);
+    error(getPrimaryErrorMessage(parsed, editingProduct ? "Failed to update product." : "Failed to add product."));
   } finally {
     setSaving(false);
   }
@@ -332,8 +369,13 @@ export default function Inventory() {
     if (!deleteConfirmId) return;
     try {
       await api.delete(`/inventory/products/${deleteConfirmId}/`);
+      setProducts((prev) => prev.filter((product) => product.id !== deleteConfirmId));
+      setCount((prev) => Math.max(prev - 1, 0));
       success("Product removed from inventory.");
-      fetchAll();
+      void fetchSummary();
+      if (page > 1 || products.length <= 1) {
+        void fetchProducts("refresh");
+      }
     } catch (err) {
       error("Failed to remove product.");
     } finally {
@@ -345,13 +387,16 @@ export default function Inventory() {
     if (!categoryName.trim()) return;
     setSaving(true);
     try {
-      await api.post("/inventory/categories/", { name: categoryName });
+      const { data } = await api.post("/inventory/categories/", { name: categoryName });
+      setCategories((prev) => {
+        if (prev.some((category) => category.id === data.id)) return prev;
+        return [...prev, data].sort((a, b) => a.name.localeCompare(b.name));
+      });
       setCategoryName("");
       setShowAddCategory(false);
       success(`Category "${categoryName}" added.`);
-      fetchAll();
-    } catch {
-      error("Failed to add category.");
+    } catch (err: unknown) {
+      error(getApiErrorMessage(err, "Failed to add category."));
     } finally {
       setSaving(false);
     }
@@ -361,16 +406,20 @@ export default function Inventory() {
     if (!adjustingProduct) return;
     setSaving(true);
     try {
-      await api.post(`/inventory/products/${adjustingProduct.id}/adjust-stock/`, {
+      const { data } = await api.post(`/inventory/products/${adjustingProduct.id}/adjust-stock/`, {
         change_amount: parseInt(adjustForm.change_amount),
         reason: adjustForm.reason,
         note: adjustForm.note,
       });
+      if (data.product) {
+        setProducts((prev) => prev.map((product) => (product.id === data.product.id ? data.product : product)));
+      }
       setShowAdjustStock(false);
+      setAdjustingProduct(null);
       success("Stock adjusted successfully.");
-      fetchAll();
-    } catch (err: any) {
-      error(err.response?.data?.error || "Failed to adjust stock.");
+      void fetchSummary();
+    } catch (err: unknown) {
+      error(getApiErrorMessage(err, "Failed to adjust stock."));
     } finally {
       setSaving(false);
     }
@@ -394,6 +443,11 @@ export default function Inventory() {
           </h1>
           <p className="text-sm mt-1 flex flex-wrap items-center gap-2" style={{ color: "var(--color-muted)" }}>
             <span>{count} product(s)</span>
+            {refreshing && (
+              <span className="text-xs font-semibold" style={{ color: "var(--color-primary)" }}>
+                Refreshing...
+              </span>
+            )}
             {lowStockCount > 0 && (
               <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-600">
                 {lowStockCount} low stock
@@ -466,7 +520,7 @@ export default function Inventory() {
       {/* Table */}
       <div className="rounded-2xl overflow-hidden"
         style={{ backgroundColor: "var(--color-surface)", border: "1px solid var(--color-border)" }}>
-        {loading ? (
+        {loading && products.length === 0 ? (
           <div className="flex items-center justify-center h-48">
             <svg className="animate-spin w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -482,7 +536,91 @@ export default function Inventory() {
             <p className="text-sm" style={{ color: "var(--color-muted)" }}>No products found</p>
           </div>
         ) : (
-          <div className="w-full overflow-x-auto">
+          <>
+          <div className="md:hidden divide-y" style={{ borderColor: "var(--color-border)" }}>
+            {products.map((product) => (
+              <div key={product.id} className="p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  {product.image ? (
+                    <div className="shrink-0 w-12 h-12 rounded-xl overflow-hidden border" style={{ borderColor: "var(--color-border)" }}>
+                      <img
+                        src={resolveAssetUrl(product.image) || undefined}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </div>
+                  ) : (
+                    <div className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center font-bold text-sm bg-primary/10 text-primary">
+                      {(product.brand || product.name).substring(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>
+                      {product.name}
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: "var(--color-muted)" }}>
+                      {product.category_name || "Uncategorized"}{product.sku ? ` • SKU: ${product.sku}` : ""}
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-3 text-sm">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>Price</p>
+                    <p className="mt-1 font-semibold" style={{ color: "var(--color-text)" }}>₦{Number(product.selling_price).toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>Stock</p>
+                    <p className={`mt-1 font-semibold ${product.is_low_stock ? "text-red-500" : ""}`} style={!product.is_low_stock ? { color: "var(--color-text)" } : {}}>
+                      {product.quantity}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>Margin</p>
+                    <p className="mt-1 font-semibold text-green-600">{Number(product.profit_margin).toFixed(1)}%</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={() => openHistory(product)}
+                    className="text-xs px-3 py-2 rounded-lg font-medium transition-colors"
+                    style={{
+                      backgroundColor: "var(--color-bg)",
+                      border: "1px solid var(--color-border)",
+                      color: "var(--color-muted)",
+                    }}>
+                    History
+                  </button>
+                  {canManageInventory && (
+                    <button onClick={() => openAdjust(product)}
+                      className="text-xs px-3 py-2 rounded-lg font-medium transition-colors"
+                      style={{
+                        backgroundColor: "var(--color-bg)",
+                        border: "1px solid var(--color-border)",
+                        color: "var(--color-text)",
+                      }}>
+                      Stock
+                    </button>
+                  )}
+                  {canManageInventory && (
+                    <button onClick={() => openEdit(product)}
+                      className="text-xs px-3 py-2 rounded-lg font-medium text-primary transition-colors"
+                      style={{ backgroundColor: "#eff6ff", border: "1px solid #bfdbfe" }}>
+                      Edit
+                    </button>
+                  )}
+                  {canManageInventory && (
+                    <button onClick={() => handleDeleteProduct(product.id)}
+                      className="text-xs px-3 py-2 rounded-lg font-medium text-red-600 transition-colors"
+                      style={{ backgroundColor: "#fef2f2", border: "1px solid #fecaca" }}>
+                      Remove
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="hidden md:block w-full overflow-x-auto">
             <table className="w-full min-w-[700px]">
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
@@ -606,6 +744,7 @@ export default function Inventory() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
 

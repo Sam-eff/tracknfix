@@ -30,6 +30,10 @@ class RepairTicketViewSet(ShopScopedMixin, viewsets.ModelViewSet):
             return [IsAuthenticated(), IsAdminOrStaff()]
         return [IsAuthenticated()]
 
+    def serialize_ticket(self, ticket):
+        fresh_ticket = self.get_queryset().get(pk=ticket.pk)
+        return RepairTicketSerializer(fresh_ticket).data
+
     def get_queryset(self):
         qs = super().get_queryset()
         status_filter = self.request.query_params.get("status")
@@ -75,7 +79,7 @@ class RepairTicketViewSet(ShopScopedMixin, viewsets.ModelViewSet):
         return Response(
             {
                 "message": "Repair ticket created.",
-                "ticket": RepairTicketSerializer(ticket).data,
+                "ticket": self.serialize_ticket(ticket),
             },
             status=status.HTTP_201_CREATED,
         )
@@ -104,7 +108,7 @@ class RepairTicketViewSet(ShopScopedMixin, viewsets.ModelViewSet):
 
         return Response({
             "message": f"Status updated to '{ticket.get_status_display()}'.",
-            "ticket": RepairTicketSerializer(ticket).data,
+            "ticket": self.serialize_ticket(ticket),
         })
 
     @action(detail=False, methods=["get"], url_path="summary")
@@ -199,6 +203,7 @@ class RepairTicketViewSet(ShopScopedMixin, viewsets.ModelViewSet):
                 "quantity_used": part.quantity_used,
                 "unit_cost": str(part.unit_cost),
             },
+            "ticket": self.serialize_ticket(ticket),
         })
 
     @action(detail=True, methods=["post"], url_path="record-payment")
@@ -216,5 +221,5 @@ class RepairTicketViewSet(ShopScopedMixin, viewsets.ModelViewSet):
 
         return Response({
             "message": "Payment records updated.",
-            "ticket": RepairTicketSerializer(ticket).data,
+            "ticket": self.serialize_ticket(ticket),
         })

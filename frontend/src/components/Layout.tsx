@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Outlet, NavLink, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -120,6 +120,29 @@ const navItems = [
   },
 ];
 
+const routePreloaders: Record<string, () => Promise<unknown>> = {
+  "/": () => import("../pages/Dashboard"),
+  "/inventory": () => import("../pages/Inventory"),
+  "/sales": () => import("../pages/Sales"),
+  "/repairs": () => import("../pages/Repairs"),
+  "/customers": () => import("../pages/Customers"),
+  "/expenses": () => import("../pages/Expenses"),
+  "/reports": () => import("../pages/Reports"),
+  "/billing": () => import("../pages/Billing"),
+  "/settings": () => import("../pages/Settings"),
+  "/help": () => import("../pages/Help"),
+};
+
+const preloadedRoutes = new Set<string>();
+
+const preloadRoute = (path: string) => {
+  if (preloadedRoutes.has(path)) return;
+  const preload = routePreloaders[path];
+  if (!preload) return;
+  preloadedRoutes.add(path);
+  void preload();
+};
+
 
 
 // --- Monetization UI ---
@@ -172,16 +195,36 @@ export default function Layout() {
   );
 
   // Filter by role and Pro Plan limits before rendering
-  const visibleNavItems = navItems.filter(
-    (item) =>
-      user?.role &&
-      item.roles &&
-      item.roles.includes(user.role) &&
-      (item.path !== "/expenses" || isPro) &&
-      (item.path !== "/reports" || isPro)
+  const visibleNavItems = useMemo(
+    () =>
+      navItems.filter(
+        (item) =>
+          user?.role &&
+          item.roles &&
+          item.roles.includes(user.role) &&
+          (item.path !== "/expenses" || isPro) &&
+          (item.path !== "/reports" || isPro)
+      ),
+    [user?.role, isPro]
   );
 
+  useEffect(() => {
+    if (visibleNavItems.length === 0) return;
 
+    const warmVisibleRoutes = () => {
+      visibleNavItems.slice(0, 5).forEach((item) => preloadRoute(item.path));
+    };
+
+    const browserWindow = typeof window !== "undefined" ? window : null;
+
+    if (browserWindow && "requestIdleCallback" in browserWindow) {
+      const id = browserWindow.requestIdleCallback(warmVisibleRoutes);
+      return () => browserWindow.cancelIdleCallback(id);
+    }
+
+    const timeout = globalThis.setTimeout(warmVisibleRoutes, 250);
+    return () => globalThis.clearTimeout(timeout);
+  }, [visibleNavItems]);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -219,6 +262,9 @@ export default function Layout() {
             to={item.path}
             end={item.path === "/"}
             onClick={() => setSidebarOpen(false)}
+            onMouseEnter={() => preloadRoute(item.path)}
+            onFocus={() => preloadRoute(item.path)}
+            onTouchStart={() => preloadRoute(item.path)}
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${isActive
                 ? "bg-primary text-white"

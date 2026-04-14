@@ -7,6 +7,7 @@ import { useToast } from "../context/ToastContext";
 import CustomerLookup from "../components/CustomerLookup";
 import Pagination from "../components/Pagination";
 import { resolveAssetUrl } from "../utils/assets";
+import { getApiErrorMessage, parseApiErrors } from "../utils/http";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const inputStyle = {
@@ -80,11 +81,12 @@ function StatusBadge({ status }: { status: string }) {
 
 // ── Ticket Detail Modal ───────────────────────────────────────────────────────
 function TicketDetail({
-  ticket, onClose, onRefresh, userRole,
+  ticket, onClose, onTicketUpdated, onSummaryRefresh, userRole,
 }: {
   ticket: RepairTicket;
   onClose: () => void;
-  onRefresh: () => void;
+  onTicketUpdated: (ticket: RepairTicket) => void;
+  onSummaryRefresh: () => void;
   userRole: string;
 }) {
   const { success, error } = useToast();
@@ -124,15 +126,17 @@ function TicketDetail({
   const handleUpdateStatus = async (newStatus: string) => {
     setUpdating(true);
     try {
-      await api.post(`/repairs/${ticket.id}/update-status/`, {
+      const { data } = await api.post(`/repairs/${ticket.id}/update-status/`, {
         status: newStatus,
         note: statusNote,
       });
-      onRefresh();
-      onClose(); // Close modal on status change is fine as it usually implies a major workflow step
+      if (data.ticket) {
+        onTicketUpdated(data.ticket);
+      }
+      setStatusNote("");
       success("Ticket status updated successfully.");
-    } catch (err: any) {
-      error(err.response?.data?.error || err.response?.data?.details?.status || "Failed to update status.");
+    } catch (err: unknown) {
+      error(getApiErrorMessage(err, "Failed to update status."));
     } finally {
       setUpdating(false);
     }
@@ -159,7 +163,7 @@ function TicketDetail({
     if (!partForm.product_id) return;
     setAddingPart(true);
     try {
-      await api.post(`/repairs/${ticket.id}/add-part/`, {
+      const { data } = await api.post(`/repairs/${ticket.id}/add-part/`, {
         product_id: parseInt(partForm.product_id),
         quantity: parseInt(partForm.quantity),
       });
@@ -167,10 +171,13 @@ function TicketDetail({
       setPartSearch("");
       setSelectedPart(null);
       setPartSearchResults([]);
-      onRefresh(); // This triggers fetchTickets sequentially
+      if (data.ticket) {
+        onTicketUpdated(data.ticket);
+      }
+      onSummaryRefresh();
       success("Part added successfully.");
-    } catch (err: any) {
-      error(err.response?.data?.error || "Failed to add part.");
+    } catch (err: unknown) {
+      error(getApiErrorMessage(err, "Failed to add part."));
     } finally {
       setAddingPart(false);
     }
@@ -179,14 +186,17 @@ function TicketDetail({
   const handleRecordPayment = async () => {
     setCollectingPayment(true);
     try {
-      await api.post(`/repairs/${ticket.id}/record-payment/`, {
+      const { data } = await api.post(`/repairs/${ticket.id}/record-payment/`, {
         amount_paid: parseFloat(paymentForm.amount_paid.toString()) || 0,
         final_cost: parseFloat(paymentForm.final_cost.toString()) || 0,
       });
-      onRefresh();
+      if (data.ticket) {
+        onTicketUpdated(data.ticket);
+      }
+      onSummaryRefresh();
       success("Payment records updated successfully.");
-    } catch (err: any) {
-      error(err.response?.data?.error || "Failed to record payment.");
+    } catch (err: unknown) {
+      error(getApiErrorMessage(err, "Failed to record payment."));
     } finally {
       setCollectingPayment(false);
     }
@@ -503,7 +513,13 @@ function TicketDetail({
 }
 
 // ── Create Ticket Modal ───────────────────────────────────────────────────────
-function CreateTicket({ onClose, onRefresh }: { onClose: () => void; onRefresh: () => void }) {
+function CreateTicket({
+  onClose,
+  onTicketCreated,
+}: {
+  onClose: () => void;
+  onTicketCreated: (ticket: RepairTicket) => void;
+}) {
   const { success } = useToast();
   const [form, setForm] = useState({
     customer_phone: "", customer_name: "",
@@ -556,8 +572,6 @@ function CreateTicket({ onClose, onRefresh }: { onClose: () => void; onRefresh: 
     const phoneRegex = /^(\+\d{1,3}\s?)?\d{10,11}$/;
     if (!form.customer_phone) {
       setErrors({ customer_phone: "Customer phone is required" });
-      console.log("Testing phone:", form.customer_phone);
-console.log("Regex Result:", phoneRegex.test(form.customer_phone));
       return;
     } else if (!phoneRegex.test(form.customer_phone)) {
       setErrors({ customer_phone: "Phone must be exactly 10 or 11 digits (with optional country code, e.g., +234)" });
@@ -577,20 +591,16 @@ console.log("Regex Result:", phoneRegex.test(form.customer_phone));
       if (form.note) formData.append("note", form.note);
       if (form.image) formData.append("image", form.image);
 
-      await api.post("/repairs/", formData, { headers: { "Content-Type": "multipart/form-data" }});
-      
-      onRefresh();
+      const { data } = await api.post("/repairs/", formData, { headers: { "Content-Type": "multipart/form-data" }});
+
+      if (data.ticket) {
+        onTicketCreated(data.ticket);
+      }
       onClose();
       success("Repair ticket created successfully!");
-    } catch (err: any) {
-      const detail = err.response?.data?.details || err.response?.data;
-      if (detail && typeof detail === "object") {
-        const mapped: Record<string, string> = {};
-        for (const key in detail) {
-          mapped[key] = Array.isArray(detail[key]) ? detail[key][0] : detail[key];
-        }
-        setErrors(mapped);
-      }
+    } catch (err: unknown) {
+      const parsed = parseApiErrors(err, "Failed to create repair ticket.");
+      setErrors(parsed.fieldErrors);
     } finally {
       setSaving(false);
     }
@@ -715,6 +725,7 @@ export default function Repairs() {
   const { user } = useAuth();
   const [tickets, setTickets] = useState<RepairTicket[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [statusFilter, setStatusFilter] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<RepairTicket | null>(null);
@@ -722,11 +733,49 @@ export default function Repairs() {
   const [count, setCount] = useState(0);
   const [summary, setSummary] = useState({ total_revenue: 0, total_expense: 0, total_profit: 0 });
 
-  const fetchTickets = async () => {
-    setLoading(true);
+  const fetchSummary = async () => {
+    try {
+      const { data } = await api.get("/repairs/summary/", { params: { status: statusFilter || undefined } });
+      setSummary(data);
+    } catch {
+      // Ignore summary refresh errors for now.
+    }
+  };
+
+  const syncTicketInState = (updatedTicket: RepairTicket) => {
+    setTickets((prev) => {
+      const matchesFilter = !statusFilter || updatedTicket.status === statusFilter;
+      const existingIndex = prev.findIndex((ticket) => ticket.id === updatedTicket.id);
+
+      if (!matchesFilter) {
+        if (existingIndex === -1) return prev;
+        setCount((current) => Math.max(0, current - 1));
+        return prev.filter((ticket) => ticket.id !== updatedTicket.id);
+      }
+
+      if (existingIndex === -1) {
+        if (page !== 1) {
+          return prev;
+        }
+        setCount((current) => current + 1);
+        return [updatedTicket, ...prev].slice(0, 20);
+      }
+
+      return prev.map((ticket) => (ticket.id === updatedTicket.id ? updatedTicket : ticket));
+    });
+
+    setSelectedTicket((prev) => (prev?.id === updatedTicket.id ? updatedTicket : prev));
+  };
+
+  const fetchTickets = async (mode: "initial" | "refresh" = "initial") => {
+    if (mode === "initial" || tickets.length === 0) {
+      setLoading(true);
+    } else {
+      setRefreshing(true);
+    }
     try {
       const [ticketsRes, sumRes] = await Promise.all([
-        api.get("/repairs/", { params: { status: statusFilter || undefined } }),
+        api.get("/repairs/", { params: { status: statusFilter || undefined, page } }),
         api.get("/repairs/summary/", { params: { status: statusFilter || undefined } })
       ]);
       const fetchedTickets = ticketsRes.data.results || ticketsRes.data;
@@ -743,10 +792,11 @@ export default function Repairs() {
       // Ignore or log
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  useEffect(() => { fetchTickets(); }, [statusFilter]);
+  useEffect(() => { fetchTickets(tickets.length === 0 ? "initial" : "refresh"); }, [statusFilter, page]);
 
   // Reset to page 1 when filters change
   useEffect(() => { setPage(1); }, [statusFilter]);
@@ -772,8 +822,13 @@ export default function Repairs() {
           <h1 className="font-display text-2xl font-bold" style={{ color: "var(--color-text)" }}>
             Repairs
           </h1>
-          <p className="text-sm mt-1" style={{ color: "var(--color-muted)" }}>
-            {tickets.length} ticket(s)
+          <p className="text-sm mt-1 flex items-center gap-2" style={{ color: "var(--color-muted)" }}>
+            <span>{count} ticket(s)</span>
+            {refreshing && (
+              <span className="text-xs font-semibold" style={{ color: "var(--color-primary)" }}>
+                Refreshing...
+              </span>
+            )}
           </p>
         </div>
         {isAdminOrStaff && (
@@ -829,20 +884,20 @@ export default function Repairs() {
       </div>
 
       {/* Status summary pills */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
         <button
           onClick={() => setStatusFilter("")}
-          className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+          className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap shrink-0"
           style={{
             backgroundColor: !statusFilter ? "var(--color-primary)" : "var(--color-surface)",
             color: !statusFilter ? "white" : "var(--color-muted)",
             border: "1px solid var(--color-border)",
           }}>
-          All ({tickets.length})
+          All ({count})
         </button>
         {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
           <button key={key} onClick={() => setStatusFilter(key)}
-            className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+            className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap shrink-0"
             style={{
               backgroundColor: statusFilter === key ? cfg.bg : "var(--color-surface)",
               color: statusFilter === key ? cfg.text : "var(--color-muted)",
@@ -856,7 +911,7 @@ export default function Repairs() {
       {/* Tickets table */}
       <div className="rounded-2xl overflow-hidden"
         style={{ backgroundColor: "var(--color-surface)", border: "1px solid var(--color-border)" }}>
-        {loading ? (
+        {loading && tickets.length === 0 ? (
           <div className="flex items-center justify-center h-48">
             <svg className="animate-spin w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -874,7 +929,55 @@ export default function Repairs() {
             <p className="text-sm" style={{ color: "var(--color-muted)" }}>No repair tickets found</p>
           </div>
         ) : (
-          <div className="w-full overflow-x-auto">
+          <>
+          <div className="md:hidden divide-y" style={{ borderColor: "var(--color-border)" }}>
+            {tickets.map((ticket) => (
+              <div key={ticket.id} className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold" style={{ color: "var(--color-text)" }}>
+                      #{ticket.id} • {ticket.customer_name || "Walk-in"}
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: "var(--color-muted)" }}>
+                      {ticket.device_type} • {ticket.device_model}
+                    </p>
+                  </div>
+                  <StatusBadge status={ticket.status} />
+                </div>
+                <p className="text-sm line-clamp-2" style={{ color: "var(--color-muted)" }}>
+                  {ticket.issue_description}
+                </p>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>
+                      Technician
+                    </p>
+                    <p className="mt-1 font-medium" style={{ color: "var(--color-text)" }}>
+                      {ticket.technician_name}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>
+                      Estimated Cost
+                    </p>
+                    <p className="mt-1 font-bold text-primary">{fmt(ticket.estimated_cost)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs" style={{ color: "var(--color-muted)" }}>
+                    {new Date(ticket.created_at).toLocaleDateString()}
+                  </p>
+                  <button onClick={() => setSelectedTicket(ticket)}
+                    className="px-3 py-2 rounded-lg text-sm font-semibold text-primary"
+                    style={{ backgroundColor: "#eff6ff", border: "1px solid #bfdbfe" }}>
+                    Manage
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden md:block w-full overflow-x-auto">
             <table className="w-full min-w-[700px]">
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
@@ -933,6 +1036,7 @@ export default function Repairs() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
 
@@ -947,13 +1051,20 @@ export default function Repairs() {
 
       {/* Modals */}
       {showCreate && (
-        <CreateTicket onClose={() => setShowCreate(false)} onRefresh={fetchTickets} />
+        <CreateTicket
+          onClose={() => setShowCreate(false)}
+          onTicketCreated={(ticket) => {
+            syncTicketInState(ticket);
+            setShowCreate(false);
+          }}
+        />
       )}
       {selectedTicket && (
         <TicketDetail
           ticket={selectedTicket}
           onClose={() => setSelectedTicket(null)}
-          onRefresh={fetchTickets}
+          onTicketUpdated={syncTicketInState}
+          onSummaryRefresh={fetchSummary}
           userRole={user?.role || "staff"}
         />
       )}

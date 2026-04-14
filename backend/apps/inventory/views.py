@@ -30,6 +30,10 @@ class ProductViewSet(ShopScopedMixin, viewsets.ModelViewSet):
     queryset = Product.objects.select_related("category").all()
     serializer_class = ProductSerializer
 
+    def serialize_product(self, product):
+        refreshed = self.get_queryset().get(pk=product.pk)
+        return self.get_serializer(refreshed).data
+
     def get_queryset(self):
         qs = super().get_queryset().filter(is_active=True)
         category = self.request.query_params.get("category")
@@ -40,8 +44,10 @@ class ProductViewSet(ShopScopedMixin, viewsets.ModelViewSet):
             from django.db.models import Q
             qs = qs.filter(
                 Q(name__icontains=search) |
+                Q(sku__icontains=search) |
                 Q(brand__icontains=search) |
-                Q(product_model__icontains=search)
+                Q(product_model__icontains=search) |
+                Q(description__icontains=search)
             )
         return qs
 
@@ -125,7 +131,7 @@ class ProductViewSet(ShopScopedMixin, viewsets.ModelViewSet):
 
         return Response({
             "message": "Stock updated.",
-            "product": product.name,
+            "product": self.serialize_product(product),
             "new_quantity": new_quantity,
         })
 

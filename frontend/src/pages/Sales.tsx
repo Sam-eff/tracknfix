@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
@@ -302,6 +302,7 @@ export default function Sales() {
   const [productsLoading, setProductsLoading] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [pendingScannedBarcode, setPendingScannedBarcode] = useState<string | null>(null);
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerName, setCustomerName] = useState("");
@@ -344,7 +345,7 @@ export default function Sales() {
     let ignore = false;
     setProductsLoading(true);
 
-    api.get("/inventory/products/", { params: { search } })
+    api.get("/inventory/products/", { params: { search: deferredSearch } })
       .then(({ data }) => {
         if (ignore) return;
         setProducts(data.results || data);
@@ -362,7 +363,7 @@ export default function Sales() {
     return () => {
       ignore = true;
     };
-  }, [search]);
+  }, [deferredSearch]);
 
   // Load sales history
   const fetchSales = () => {
