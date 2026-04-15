@@ -25,7 +25,7 @@ EXEMPT_PATHS = [
 class SubscriptionMiddleware:
     """
     Blocks write operations (POST/PUT/PATCH/DELETE) for shops whose
-    subscription has expired and whose 14-day trial has also ended.
+    subscription has expired and whose 30-day trial has also ended.
     GET requests are always allowed so owners can still see their data.
     """
 

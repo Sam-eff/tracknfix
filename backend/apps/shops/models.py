@@ -5,6 +5,8 @@ from datetime import timedelta
 
 
 class Shop(models.Model):
+    TRIAL_DURATION_DAYS = 30
+
     name = models.CharField(max_length=200)
     owner_name = models.CharField(max_length=200)
     email = models.EmailField(unique=True)
@@ -133,13 +135,13 @@ class Shop(models.Model):
 
     @property
     def is_in_trial(self):
-        """14-day trial from creation — no payment required yet."""
-        trial_end = self.created_at + timedelta(days=14)
+        """30-day trial from creation — no payment required yet."""
+        trial_end = self.created_at + timedelta(days=self.TRIAL_DURATION_DAYS)
         return timezone.now() < trial_end
 
     @property
     def trial_days_remaining(self):
         if not self.is_in_trial:
             return 0
-        trial_end = self.created_at + timedelta(days=14)
+        trial_end = self.created_at + timedelta(days=self.TRIAL_DURATION_DAYS)
         return max(0, (trial_end - timezone.now()).days)

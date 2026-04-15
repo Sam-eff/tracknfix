@@ -155,7 +155,7 @@ const TrialBanner = ({ daysLeft }: { daysLeft: number }) => (
         </svg>
       </div>
       <div>
-        <p className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>Your 14-day Pro trial ends in {daysLeft} day{daysLeft !== 1 ? 's' : ''}</p>
+        <p className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>Your 30-day Pro trial ends in {daysLeft} day{daysLeft !== 1 ? 's' : ''}</p>
         <p className="text-xs" style={{ color: "var(--color-muted)" }}>Choose Basic for core operations or Pro to keep advanced features after trial.</p>
       </div>
     </div>

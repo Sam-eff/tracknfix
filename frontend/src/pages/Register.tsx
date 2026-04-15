@@ -6,6 +6,7 @@ import { useTheme } from "../context/ThemeContext";
 import api from "../api/axios";
 import { PasswordInput } from "../components/PasswordInput";
 import { PublicLegalLinks } from "../components/PublicLegalLinks";
+import { parseApiErrors } from "../utils/http";
 
 export default function Register() {
   const { login } = useAuth();
@@ -50,18 +51,15 @@ export default function Register() {
       const { data } = await api.post("/auth/register/", form);
       login(data.user);
       navigate("/");
-    } catch (err: any) {
-      const detail = err.response?.data?.details;
-      if (detail && typeof detail === "object") {
-        const mapped: Record<string, string> = {};
-        for (const key in detail) {
-          mapped[key] = Array.isArray(detail[key]) ? detail[key][0] : detail[key];
-        }
-        setErrors(mapped);
-        // If error is in step 1 fields, go back
-        if (mapped.shop_name || mapped.shop_phone) setStep(1);
-      } else {
-        setErrors({ general: "Registration failed. Please try again." });
+    } catch (err: unknown) {
+      const parsed = parseApiErrors(err, "Registration failed. Please try again.");
+      setErrors(
+        Object.keys(parsed.fieldErrors).length > 0
+          ? parsed.fieldErrors
+          : { general: parsed.nonFieldError || "Registration failed. Please try again." },
+      );
+      if (parsed.fieldErrors.shop_name || parsed.fieldErrors.shop_phone) {
+        setStep(1);
       }
     } finally {
       setLoading(false);
@@ -118,7 +116,7 @@ export default function Register() {
 
             <div className="mt-10 space-y-4">
               {[
-                { icon: "✓", text: "14-day free trial, no credit card required" },
+                { icon: "✓", text: "30-day free trial, no credit card required" },
                 { icon: "✓", text: "Unlimited repairs and sales tracking" },
                 { icon: "✓", text: "Real-time inventory and low stock alerts" },
               ].map((item) => (

@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import ConfirmModal from "../components/ConfirmModal";
+import { getApiErrorMessage } from "../utils/http";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Plan {
@@ -47,7 +48,7 @@ const formatLimit = (value: number, noun: string) =>
 function StatusBadge({ status, planName }: { status: string; planName?: string | null }) {
   const cfg: Record<string, { bg: string; text: string; label: string }> = {
     active:    { bg: "#dcfce7", text: "#166534", label: "Active" },
-    trial:     { bg: "#e0f2fe", text: "#0369a1", label: "14-Day Pro Trial" },
+    trial:     { bg: "#e0f2fe", text: "#0369a1", label: "30-Day Pro Trial" },
     inactive:  { bg: "#f1f5f9", text: "#475569", label: "Inactive" },
     cancelled: { bg: "#fef2f2", text: "#dc2626", label: "Cancelled" },
     success:   { bg: "#dcfce7", text: "#166534", label: "Success" },
@@ -235,8 +236,8 @@ export default function Billing() {
       if (data.authorization_url) {
         window.location.href = data.authorization_url;
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to initialize payment.");
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Failed to initialize payment."));
     } finally {
       setPayingPlanId(null);
     }
@@ -253,8 +254,8 @@ export default function Billing() {
     try {
       await api.post("/subscriptions/cancel/");
       fetchAll();
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to cancel subscription.");
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Failed to cancel subscription."));
     } finally {
       setCancelling(false);
     }
@@ -267,8 +268,8 @@ export default function Billing() {
       await api.post("/subscriptions/cancel-checkout/");
       setToast({ message: "Pending checkout cancelled. Your current plan stays the same.", type: "success" });
       fetchAll();
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to cancel pending checkout.");
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Failed to cancel pending checkout."));
     } finally {
       setCancellingPendingCheckout(false);
     }
@@ -399,7 +400,7 @@ export default function Billing() {
 
               {isTrialOnly && (
                 <p className="text-sm" style={{ color: "var(--color-muted)" }}>
-                  Your shop is currently on a 14-day free Pro trial. Choose Basic for core tools or Pro for advanced features before it ends.
+                  Your shop is currently on a 30-day free Pro trial. Choose Basic for core tools or Pro for advanced features before it ends.
                 </p>
               )}
 
@@ -440,7 +441,7 @@ export default function Billing() {
                   <div className="h-2 rounded-full overflow-hidden"
                     style={{ backgroundColor: "var(--color-border)" }}>
                     <div className="h-full rounded-full bg-primary transition-all"
-                      style={{ width: `${Math.min(100, ((14 - daysLeft) / 14) * 100)}%` }} />
+                      style={{ width: `${Math.min(100, ((30 - daysLeft) / 30) * 100)}%` }} />
                   </div>
                 </div>
               )}
