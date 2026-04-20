@@ -45,7 +45,13 @@ if SENTRY_DSN:
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env(DEBUG=(bool, False))
-environ.Env.read_env(BASE_DIR / ".env")
+default_env_file = BASE_DIR / ".env"
+if default_env_file.exists():
+    environ.Env.read_env(default_env_file)
+
+local_env_file = BASE_DIR / ".env.local"
+if local_env_file.exists():
+    environ.Env.read_env(local_env_file, overwrite=True)
 
 
 
@@ -255,9 +261,12 @@ REDIS_URL = env("REDIS_URL", default="redis://localhost:6379/0")
 CELERY_BROKER_URL = env('REDIS_URL')
 CELERY_RESULT_BACKEND = env('REDIS_URL')
 
-# Upstash requires this for SSL/TLS connections
-CELERY_REDIS_BACKEND_USE_SSL = {'ssl_cert_reqs': 'none'}
-CELERY_BROKER_USE_SSL = {'ssl_cert_reqs': 'none'}
+# Only enable Redis SSL options when the configured URL actually uses rediss://.
+# Local Docker and most local dev setups use plain redis:// and will crash if SSL
+# parameters are forced onto a non-SSL connection.
+if REDIS_URL.startswith("rediss://"):
+    CELERY_REDIS_BACKEND_USE_SSL = {"ssl_cert_reqs": "none"}
+    CELERY_BROKER_USE_SSL = {"ssl_cert_reqs": "none"}
 
 #  Paystack
 
