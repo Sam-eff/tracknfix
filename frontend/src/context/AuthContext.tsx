@@ -1,3 +1,4 @@
+import { AxiosError } from "axios";
 import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import type { User } from "../types";
@@ -20,6 +21,36 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
+const LAST_KNOWN_USER_KEY = "tracknfix:last-known-user";
+
+const readCachedUser = (): User | null => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(LAST_KNOWN_USER_KEY);
+    return raw ? (JSON.parse(raw) as User) : null;
+  } catch {
+    return null;
+  }
+};
+
+const persistCachedUser = (user: User | null) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    if (user) {
+      window.localStorage.setItem(LAST_KNOWN_USER_KEY, JSON.stringify(user));
+    } else {
+      window.localStorage.removeItem(LAST_KNOWN_USER_KEY);
+    }
+  } catch {
+    // Offline resilience must not fail because storage is unavailable.
+  }
+};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -27,17 +58,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let isMounted = true;
+    const cachedUser = readCachedUser();
 
     api
       .get("/auth/me/", { skipAuthRedirect: true })
       .then(({ data }) => {
         if (isMounted) {
           setUser(data);
+          persistCachedUser(data);
         }
       })
-      .catch(() => {
+      .catch((requestError: AxiosError) => {
         if (isMounted) {
-          setUser(null);
+          if (!requestError.response && cachedUser) {
+            setUser(cachedUser);
+          } else {
+            setUser(null);
+            persistCachedUser(null);
+          }
         }
       })
       .finally(() => {
@@ -53,11 +91,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = (nextUser: User) => {
     setUser(nextUser);
+    persistCachedUser(nextUser);
     setIsLoading(false);
   };
 
   const logout = () => {
     setUser(null);
+    persistCachedUser(null);
     setIsLoading(false);
   };
 
@@ -77,7 +117,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         login,
         logout,
-        setCurrentUser: setUser,
+        setCurrentUser: (nextUser) => {
+          setUser(nextUser);
+          persistCachedUser(nextUser);
+        },
         isAuthenticated: !!user,
         isLoading,
         isPro,

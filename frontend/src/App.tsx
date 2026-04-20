@@ -7,6 +7,7 @@ import {
   PageSkeleton,
   PublicPageFallback,
 } from "./components/LoadingFallbacks";
+import OfflineNotice from "./components/OfflineNotice";
 
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
@@ -93,42 +94,45 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/login" element={withSuspense(<Login />, <PublicPageFallback />)} />
-      <Route path="/register" element={withSuspense(<Register />, <PublicPageFallback />)} />
-      <Route path="/forgot-password" element={withSuspense(<ForgotPassword />, <PublicPageFallback />)} />
-      <Route path="/reset-password" element={withSuspense(<ResetPassword />, <PublicPageFallback />)} />
-      <Route path="/terms" element={withSuspense(<Terms />, <PublicPageFallback />)} />
-      <Route path="/privacy-policy" element={withSuspense(<PrivacyPolicy />, <PublicPageFallback />)} />
-      <Route
-        path="/billing"
-        element={<PrivateRoute>{withSuspense(<Layout />, <AppShellFallback />)}</PrivateRoute>}
-      >
-        <Route index element={withSuspense(<Billing />, <PageSkeleton />)} />
-      </Route>
-      <Route
-        path="/"
-        element={
-          <PrivateRoute>
-            {withSuspense(<Layout />, <AppShellFallback />)}
-          </PrivateRoute>
-        }
-      >
-        <Route index element={withSuspense(<Dashboard />, <DashboardSkeleton />)} />
-        <Route path="inventory" element={withSuspense(<Inventory />, <PageSkeleton />)} />
-        <Route path="sales" element={withSuspense(<Sales />, <PageSkeleton />)} />
-        <Route path="repairs" element={withSuspense(<Repairs />, <PageSkeleton />)} />
-        <Route path="customers" element={withSuspense(<Customers />, <PageSkeleton />)} />
-        <Route path="expenses" element={withSuspense(<Expenses />, <PageSkeleton />)} />
-        <Route path="reports" element={withSuspense(<Reports />, <PageSkeleton />)} />
-        <Route path="settings" element={withSuspense(<Settings />, <PageSkeleton />)} />
-        <Route path="help" element={withSuspense(<Help />, <PageSkeleton />)} />
-        {/* Fallback route inside layout (for authenticated bad URLs) */}
-        <Route path="*" element={withSuspense(<NotFound />, <PageSkeleton />)} />
-      </Route>
-      
-      {/* Global Fallback for completely unhandled URLs outside layout */}
-      <Route path="*" element={withSuspense(<NotFound />, <PublicPageFallback />)} />
-    </Routes>
+    <>
+      <OfflineNotice />
+      <Routes>
+        <Route path="/login" element={withSuspense(<Login />, <PublicPageFallback />)} />
+        <Route path="/register" element={withSuspense(<Register />, <PublicPageFallback />)} />
+        <Route path="/forgot-password" element={withSuspense(<ForgotPassword />, <PublicPageFallback />)} />
+        <Route path="/reset-password" element={withSuspense(<ResetPassword />, <PublicPageFallback />)} />
+        <Route path="/terms" element={withSuspense(<Terms />, <PublicPageFallback />)} />
+        <Route path="/privacy-policy" element={withSuspense(<PrivacyPolicy />, <PublicPageFallback />)} />
+        <Route
+          path="/billing"
+          element={<PrivateRoute>{withSuspense(<Layout />, <AppShellFallback />)}</PrivateRoute>}
+        >
+          <Route index element={withSuspense(<Billing />, <PageSkeleton />)} />
+        </Route>
+        <Route
+          path="/"
+          element={
+            <PrivateRoute>
+              {withSuspense(<Layout />, <AppShellFallback />)}
+            </PrivateRoute>
+          }
+        >
+          <Route index element={withSuspense(<Dashboard />, <DashboardSkeleton />)} />
+          <Route path="inventory" element={withSuspense(<Inventory />, <PageSkeleton />)} />
+          <Route path="sales" element={withSuspense(<Sales />, <PageSkeleton />)} />
+          <Route path="repairs" element={withSuspense(<Repairs />, <PageSkeleton />)} />
+          <Route path="customers" element={withSuspense(<Customers />, <PageSkeleton />)} />
+          <Route path="expenses" element={withSuspense(<Expenses />, <PageSkeleton />)} />
+          <Route path="reports" element={withSuspense(<Reports />, <PageSkeleton />)} />
+          <Route path="settings" element={withSuspense(<Settings />, <PageSkeleton />)} />
+          <Route path="help" element={withSuspense(<Help />, <PageSkeleton />)} />
+          {/* Fallback route inside layout (for authenticated bad URLs) */}
+          <Route path="*" element={withSuspense(<NotFound />, <PageSkeleton />)} />
+        </Route>
+
+        {/* Global Fallback for completely unhandled URLs outside layout */}
+        <Route path="*" element={withSuspense(<NotFound />, <PublicPageFallback />)} />
+      </Routes>
+    </>
   );
 }

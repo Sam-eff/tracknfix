@@ -1,0 +1,17 @@
+{
+  "name": "TracknFix",
+  "short_name": "TracknFix",
+  "description": "Inventory, sales, repairs and customer management for Nigerian tech shops.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#134e5e",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "1024x1024",
+      "type": "image/png"
+    }
+  ]
+}
