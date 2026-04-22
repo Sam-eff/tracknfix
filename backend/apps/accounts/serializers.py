@@ -166,10 +166,14 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
     def validate_phone(self, value):
         import re
-        if value and not re.match(r'^(\+\d{1,3}\s?)?\d{9}$', value):
-            raise serializers.ValidationError(
-                "Phone must be exactly 9 digits (with optional country code, e.g., +234)"
-            )
+        if value:
+            # Strip spaces and dashes for standard processing
+            cleaned = re.sub(r'[\s\-]', '', value)
+            if not re.match(r'^\+?[0-9]{8,15}$', cleaned):
+                raise serializers.ValidationError(
+                    "Phone format is invalid. Must contain 8 to 15 digits (with optional country code)."
+                )
+            return cleaned
         return value
 
 
@@ -210,9 +214,9 @@ class StaffCreateSerializer(serializers.ModelSerializer):
 
     def validate_phone(self, value):
         import re
-        if value and not re.match(r'^(\+\d{1,3}\s?)?\d{9}$', value):
+        if value and not re.match(r'^(\+\d{1,3}\s?)?\d{10,11}$', value):
             raise serializers.ValidationError(
-                "Phone must be exactly 9 digits (with optional country code, e.g., +234)"
+                "Phone must be exactly 10 or 11 digits (with optional country code, e.g., +234)"
             )
         return value
 

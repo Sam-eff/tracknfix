@@ -14,8 +14,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-    # No host port binding — DB is only accessible within Docker internal network
-    # Expose 5432 temporarily for local dev if needed: ports: ["127.0.0.1:5432:5432"]
 
   redis:
     image: redis:7-alpine
@@ -26,18 +24,15 @@ services:
       timeout: 5s
       retries: 5
       start_period: 5s
-    # No host port binding — Redis is only accessible within Docker internal network
-    # Expose 6379 temporarily for local dev if needed: ports: ["127.0.0.1:6379:6379"]
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    image: techshopmananger-backend
+    image: techshopmananger-backend-dev
     command: >
-      sh -c "python manage.py collectstatic --noinput &&
-             python manage.py migrate &&
-             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3"
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./backend:/app
       - media_files:/app/media
@@ -46,11 +41,11 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      - SENTRY_DSN=${SENTRY_BACKEND_DSN}
       - DJANGO_SETTINGS_MODULE=config.settings
       - DATABASE_URL=postgres://techshop_user:${DB_PASSWORD:?DB_PASSWORD is required}@db:5432/techshop_db
       - REDIS_URL=redis://redis:6379/0
-      - CORS_ALLOWED_ORIGINS=http://localhost:5173
+      - CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+      - CSRF_TRUSTED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://localhost:8000,http://127.0.0.1:8000
       - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,backend
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/', timeout=5).read()"]
@@ -63,7 +58,7 @@ services:
       - redis
 
   celery:
-    image: techshopmananger-backend
+    image: techshopmananger-backend-dev
     command: celery -A config worker -l info
     volumes:
       - ./backend:/app
@@ -78,7 +73,7 @@ services:
       - redis
 
   celery-beat:
-    image: techshopmananger-backend
+    image: techshopmananger-backend-dev
     command: celery -A config beat -l info
     volumes:
       - ./backend:/app
@@ -95,18 +90,22 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        VITE_API_URL: /api/v1
+      dockerfile: Dockerfile.dev
+    image: techshopmananger-frontend-dev
+    command: npm run dev -- --host 0.0.0.0 --port 5173
     ports:
-      - "80:80"  # Expose Nginx proxy to the host machine
+      - "5173:5173"
     volumes:
-      - media_files:/usr/share/nginx/media:ro  # Read-only access to media for Nginx
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
     environment:
-      - VITE_SENTRY_DSN=${VITE_SENTRY_DSN}
       - VITE_API_URL=/api/v1
+      - VITE_DEV_BACKEND_URL=http://backend:8000
+      - VITE_SENTRY_DSN=${VITE_SENTRY_DSN}
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/healthz || exit 1"]
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:5173 || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -117,3 +116,4 @@ services:
 volumes:
   postgres_data:
   media_files:
+  frontend_node_modules:

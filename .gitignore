@@ -24,6 +24,8 @@ develop-eggs/
 .installed.cfg
 lib/
 lib64/
+docs/
+
 
 # ── Virtual Environments ──────────────────────────────────────────────────────
 backend/appenv/

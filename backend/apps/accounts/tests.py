@@ -279,6 +279,26 @@ class AuthSecurityTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("detail", response.data)
 
+    def test_staff_create_accepts_same_phone_format_used_by_frontend_forms(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(
+            "/api/v1/auth/staff/",
+            {
+                "email": "staffphone@example.com",
+                "first_name": "Staff",
+                "last_name": "Phone",
+                "phone": "08012345678",
+                "password": "StrongPass123!",
+                "role": Role.STAFF,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["email"], "staffphone@example.com")
+        self.assertEqual(response.data["phone"], "08012345678")
+
     def test_deleted_subscription_does_not_leave_shop_active_from_stale_expiry(self):
         now = timezone.now()
         Shop.objects.filter(id=self.shop.id).update(

@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { useToast } from "../context/ToastContext";
 import api from "../api/axios";
+import { parseApiErrors, getApiErrorMessage, getPrimaryErrorMessage } from "../utils/http";
 import ConfirmModal from "../components/ConfirmModal";
 import { PasswordInput } from "../components/PasswordInput";
 
@@ -13,8 +14,8 @@ const inputStyle = {
   color: "var(--color-text)",
 };
 
-function Field({ label, hint, children }: {
-  label: string; hint?: string; children: React.ReactNode;
+function Field({ label, hint, error, children }: {
+  label: string; hint?: string; error?: string; children: React.ReactNode;
 }) {
   return (
     <div>
@@ -22,23 +23,32 @@ function Field({ label, hint, children }: {
         {label}
       </label>
       {children}
-      {hint && <p className="text-xs mt-1.5" style={{ color: "var(--color-muted)" }}>{hint}</p>}
+      {error ? (
+        <p className="text-xs mt-1.5 text-red-500 font-medium">{error}</p>
+      ) : hint ? (
+        <p className="text-xs mt-1.5" style={{ color: "var(--color-muted)" }}>{hint}</p>
+      ) : null}
     </div>
   );
 }
 
-function Input({ name, value, onChange, type = "text", placeholder, disabled }: {
+function Input({ name, value, onChange, type = "text", placeholder, disabled, hasError }: {
   name: string; value: string; onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  type?: string; placeholder?: string; disabled?: boolean;
+  type?: string; placeholder?: string; disabled?: boolean; hasError?: boolean;
 }) {
   return (
     <input
       name={name} value={value} onChange={onChange}
       type={type} placeholder={placeholder} disabled={disabled}
-      className="w-full px-4 py-2.5 rounded-xl text-sm outline-none disabled:opacity-50"
-      style={inputStyle}
-      onFocus={(e) => !disabled && (e.target.style.borderColor = "var(--color-primary)")}
-      onBlur={(e) => (e.target.style.borderColor = "var(--color-border)")}
+      className={`w-full px-4 py-2.5 rounded-xl text-sm outline-none disabled:opacity-50 transition-colors ${
+        hasError ? "border-red-500 focus:border-red-500" : ""
+      }`}
+      style={{
+        ...inputStyle,
+        borderColor: hasError ? "var(--color-danger, #ef4444)" : "var(--color-border)",
+      }}
+      onFocus={(e) => !disabled && (e.target.style.borderColor = hasError ? "var(--color-danger, #ef4444)" : "var(--color-primary)")}
+      onBlur={(e) => (e.target.style.borderColor = hasError ? "var(--color-danger, #ef4444)" : "var(--color-border)")}
     />
   );
 }
@@ -85,8 +95,17 @@ function SaveButton({ onClick, saving, saved }: {
 }
 
 // ── Staff Row ─────────────────────────────────────────────────────────────────
+interface StaffMember {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  role: string;
+  is_active: boolean;
+}
+
 function StaffRow({ staff, onDeactivate, onResetPassword }: {
-  staff: any;
+  staff: StaffMember;
   onDeactivate: (id: number) => void;
   onResetPassword: (id: number, name: string) => void;
 }) {
@@ -193,6 +212,7 @@ export default function Settings() {
   });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
+  const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
 
   // Password
   const [passwords, setPasswords] = useState({
@@ -200,6 +220,7 @@ export default function Settings() {
   });
   const [pwSaving, setPwSaving] = useState(false);
   const [pwSaved, setPwSaved] = useState(false);
+  const [pwErrors, setPwErrors] = useState<Record<string, string>>({});
 
   // Shop
   const [shop, setShop] = useState({
@@ -209,13 +230,15 @@ export default function Settings() {
   });
   const [shopSaving, setShopSaving] = useState(false);
   const [shopSaved, setShopSaved] = useState(false);
+  const [shopErrors, setShopErrors] = useState<Record<string, string>>({});
 
   // Staff
-  const [staff, setStaff] = useState<any[]>([]);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
   const [showAddStaff, setShowAddStaff] = useState(false);
   const [staffForm, setStaffForm] = useState({
     first_name: "", last_name: "", email: "", phone: "", password: "", role: "staff",
   });
+  const [staffErrors, setStaffErrors] = useState<Record<string, string>>({});
   const [staffSaving, setStaffSaving] = useState(false);
   const [deactivateConfirmId, setDeactivateConfirmId] = useState<number | null>(null);
   const [backupPreviewFile, setBackupPreviewFile] = useState<File | null>(null);
@@ -229,6 +252,7 @@ export default function Settings() {
   const [resetPasswordId, setResetPasswordId] = useState<number | null>(null);
   const [resetPasswordName, setResetPasswordName] = useState("");
   const [resetPasswordValue, setResetPasswordValue] = useState("");
+  const [resetPasswordErrors, setResetPasswordErrors] = useState<Record<string, string>>({});
   const [resetPasswordSaving, setResetPasswordSaving] = useState(false);
 
   useEffect(() => {
@@ -263,19 +287,35 @@ export default function Settings() {
 
   // Save profile
   const handleSaveProfile = async () => {
+    setProfileErrors({});
+
+    // Client-side validation for required fields
+    const clientErrors: Record<string, string> = {};
+    if (!profile.first_name.trim()) clientErrors.first_name = "First name is required.";
+    if (!profile.last_name.trim()) clientErrors.last_name = "Last name is required.";
+    if (Object.keys(clientErrors).length > 0) {
+      setProfileErrors(clientErrors);
+      return;
+    }
+
     setProfileSaving(true);
     try {
-      const { data } = await api.patch("/auth/me/", {
-        first_name: profile.first_name,
-        last_name: profile.last_name,
-        phone: profile.phone,
-      });
+      const payload: Record<string, string> = {
+        first_name: profile.first_name.trim(),
+        last_name: profile.last_name.trim(),
+      };
+      // Only include phone if user has entered something
+      if (profile.phone.trim()) payload.phone = profile.phone.trim();
+
+      const { data } = await api.patch("/auth/me/", payload);
       setCurrentUser(data);
       setProfileSaved(true);
       success("Profile updated successfully!");
       setTimeout(() => setProfileSaved(false), 3000);
-    } catch (err: any) {
-      error(err.response?.data?.message || "Failed to update profile.");
+    } catch (err: unknown) {
+      const parsed = parseApiErrors(err, "Failed to update profile.");
+      setProfileErrors(parsed.fieldErrors);
+      error(getPrimaryErrorMessage(parsed, "Failed to update profile."));
     } finally {
       setProfileSaving(false);
     }
@@ -283,12 +323,13 @@ export default function Settings() {
 
   // Save password
   const handleSavePassword = async () => {
+    setPwErrors({});
     if (passwords.new_password !== passwords.confirm_password) {
-      error("Passwords do not match.");
+      setPwErrors({ confirm_password: "Passwords do not match." });
       return;
     }
     if (passwords.new_password.length < 8) {
-      error("Password must be at least 8 characters.");
+      setPwErrors({ new_password: "Password must be at least 8 characters." });
       return;
     }
     setPwSaving(true);
@@ -302,8 +343,10 @@ export default function Settings() {
       setPwSaved(true);
       success("Password changed successfully!");
       setTimeout(() => setPwSaved(false), 3000);
-    } catch (err: any) {
-      error(err.response?.data?.message || err.response?.data?.error || "Failed to change password.");
+    } catch (err: unknown) {
+      const parsed = parseApiErrors(err, "Failed to change password.");
+      setPwErrors(parsed.fieldErrors);
+      error(getPrimaryErrorMessage(parsed, "Failed to change password."));
     } finally {
       setPwSaving(false);
     }
@@ -311,9 +354,15 @@ export default function Settings() {
 
   // Save shop
   const handleSaveShop = async () => {
+    setShopErrors({});
+    const clientErrors: Record<string, string> = {};
+    if (!shop.name.trim()) clientErrors.name = "Shop name is required.";
     const phoneRegex = /^(\+\d{1,3}\s?)?\d{10,11}$/;
     if (shop.phone && !phoneRegex.test(shop.phone)) {
-      error("Shop phone must be exactly 10 or 11 digits (with optional country code, e.g., +234)");
+      clientErrors.phone = "Shop phone must be exactly 10 or 11 digits (with optional country code, e.g., +234)";
+    }
+    if (Object.keys(clientErrors).length > 0) {
+      setShopErrors(clientErrors);
       return;
     }
     setShopSaving(true);
@@ -322,8 +371,10 @@ export default function Settings() {
       setShopSaved(true);
       success("Shop information updated!");
       setTimeout(() => setShopSaved(false), 3000);
-    } catch (err: any) {
-      error(err.response?.data?.message || "Failed to update shop.");
+    } catch (err: unknown) {
+      const parsed = parseApiErrors(err, "Failed to update shop.");
+      setShopErrors(parsed.fieldErrors);
+      error(getPrimaryErrorMessage(parsed, "Failed to update shop."));
     } finally {
       setShopSaving(false);
     }
@@ -331,9 +382,19 @@ export default function Settings() {
 
   // Add staff
   const handleAddStaff = async () => {
+    setStaffErrors({});
+    const clientErrors: Record<string, string> = {};
+    if (!staffForm.first_name.trim()) clientErrors.first_name = "First name is required.";
+    if (!staffForm.last_name.trim()) clientErrors.last_name = "Last name is required.";
+    if (!staffForm.email.trim()) clientErrors.email = "Email address is required.";
+    if (!staffForm.password.trim()) clientErrors.password = "Temporary password is required.";
+    else if (staffForm.password.length < 8) clientErrors.password = "Password must be at least 8 characters.";
     const phoneRegex = /^(\+\d{1,3}\s?)?\d{10,11}$/;
     if (staffForm.phone && !phoneRegex.test(staffForm.phone)) {
-      error("Staff phone must be exactly 10 or 11 digits (with optional country code, e.g., +234)");
+      clientErrors.phone = "Phone must be exactly 10 or 11 digits (with optional country code, e.g., +234)";
+    }
+    if (Object.keys(clientErrors).length > 0) {
+      setStaffErrors(clientErrors);
       return;
     }
     setStaffSaving(true);
@@ -343,16 +404,10 @@ export default function Settings() {
       setStaffForm({ first_name: "", last_name: "", email: "", phone: "", password: "", role: "staff" });
       setShowAddStaff(false);
       success(`Added ${data.first_name} as ${data.role} successfully!`);
-    } catch (err: any) {
-      const detail = err.response?.data?.details || err.response?.data?.detail || err.response?.data;
-      if (typeof detail === "string") {
-        error(detail);
-      } else if (typeof detail === "object" && detail !== null) {
-        const first = Object.values(detail)[0];
-        error(Array.isArray(first) ? first[0] as string : String(first));
-      } else {
-        error("Failed to add staff member.");
-      }
+    } catch (err: unknown) {
+      const parsed = parseApiErrors(err, "Failed to add staff member.");
+      setStaffErrors(parsed.fieldErrors);
+      error(getPrimaryErrorMessage(parsed, "Failed to add staff member."));
     } finally {
       setStaffSaving(false);
     }
@@ -369,8 +424,8 @@ export default function Settings() {
       await api.patch(`/auth/staff/${deactivateConfirmId}/`, { is_active: false });
       setStaff((prev) => prev.map((s) => s.id === deactivateConfirmId ? { ...s, is_active: false } : s));
       success("Staff member access revoked.");
-    } catch {
-      error("Failed to deactivate staff.");
+    } catch (err: unknown) {
+      error(getApiErrorMessage(err, "Failed to deactivate staff."));
     } finally {
       setDeactivateConfirmId(null);
     }
@@ -378,8 +433,11 @@ export default function Settings() {
 
   const handleResetStaffPasswordSubmit = async () => {
     if (!resetPasswordId) return;
+    setResetPasswordErrors({});
     if (resetPasswordValue.length < 8) {
-      error("Password must be at least 8 characters.");
+      const message = "Password must be at least 8 characters.";
+      setResetPasswordErrors({ new_password: message });
+      error(message);
       return;
     }
     setResetPasswordSaving(true);
@@ -388,8 +446,11 @@ export default function Settings() {
       success(`Password for ${resetPasswordName} reset successfully.`);
       setResetPasswordId(null);
       setResetPasswordValue("");
-    } catch (err: any) {
-      error(err.response?.data?.error || "Failed to reset password.");
+      setResetPasswordErrors({});
+    } catch (err: unknown) {
+      const parsed = parseApiErrors(err, "Failed to reset password.");
+      setResetPasswordErrors(parsed.fieldErrors);
+      error(getPrimaryErrorMessage(parsed, "Failed to reset password."));
     } finally {
       setResetPasswordSaving(false);
     }
@@ -399,6 +460,7 @@ export default function Settings() {
     setResetPasswordId(id);
     setResetPasswordName(name);
     setResetPasswordValue("");
+    setResetPasswordErrors({});
   };
 
   const handleExport = async (fmt: "pdf" | "zip") => {
@@ -413,8 +475,8 @@ export default function Settings() {
       a.click();
       window.URL.revokeObjectURL(url);
       success(`Exported shop backup as ${fmt.toUpperCase()} successfully.`);
-    } catch {
-      error("Export failed. Please try again.");
+    } catch (err: unknown) {
+      error(getApiErrorMessage(err, "Export failed. Please try again."));
     }
   };
 
@@ -435,8 +497,8 @@ export default function Settings() {
       setBackupPreview(data);
       setBackupRestoreConfirmation("");
       success("Backup preview generated. No data has been imported.");
-    } catch (err: any) {
-      error(err.response?.data?.file?.[0] || err.response?.data?.detail || "Could not preview this backup file.");
+    } catch (err: unknown) {
+      error(getApiErrorMessage(err, "Could not preview this backup file."));
       setBackupPreview(null);
       setBackupRestoreConfirmation("");
     } finally {
@@ -473,13 +535,8 @@ export default function Settings() {
       setBackupPreview(null);
       setBackupPreviewFile(null);
       setBackupFileInputKey((current) => current + 1);
-    } catch (err: any) {
-      error(
-        err.response?.data?.confirmation?.[0] ||
-        err.response?.data?.file?.[0] ||
-        err.response?.data?.detail ||
-        "Could not restore this backup."
-      );
+    } catch (err: unknown) {
+      error(getApiErrorMessage(err, "Could not restore this backup."));
     } finally {
       setBackupRestoreLoading(false);
     }
@@ -548,21 +605,21 @@ export default function Settings() {
             {/* Profile */}
             <Card title="Your Profile" description="Update your personal information">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="First Name">
-                  <Input name="first_name" value={profile.first_name}
+                <Field label="First Name" error={profileErrors.first_name}>
+                  <Input name="first_name" value={profile.first_name} hasError={!!profileErrors.first_name}
                     onChange={(e) => setProfile({ ...profile, first_name: e.target.value })} />
                 </Field>
-                <Field label="Last Name">
-                  <Input name="last_name" value={profile.last_name}
+                <Field label="Last Name" error={profileErrors.last_name}>
+                  <Input name="last_name" value={profile.last_name} hasError={!!profileErrors.last_name}
                     onChange={(e) => setProfile({ ...profile, last_name: e.target.value })} />
                 </Field>
               </div>
-              <Field label="Email" hint="Changing email will require you to log in again">
+              <Field label="Email Address">
                 <Input name="email" value={profile.email} type="email"
                   disabled />
               </Field>
-              <Field label="Phone">
-                <Input name="phone" value={profile.phone} type="tel"
+              <Field label="Phone" error={profileErrors.phone}>
+                <Input name="phone" value={profile.phone} type="tel" hasError={!!profileErrors.phone}
                   onChange={(e) => setProfile({ ...profile, phone: e.target.value })} />
               </Field>
               <Field label="Role">
@@ -576,39 +633,18 @@ export default function Settings() {
         {activeTab === "security" && (
           <div className="space-y-6 animate-fade-in">
             {/* Password */}
-            <Card title="Change Password" description="Use a strong password with at least 8 characters">
-              <Field label="Current Password">
-                <PasswordInput
-                  name="old_password"
-                  value={passwords.old_password}
-                  onChange={(e) => setPasswords({ ...passwords, old_password: e.target.value })}
-                  placeholder="Enter current password"
-                  style={inputStyle}
-                  onFocus={(e) => (e.target.style.borderColor = "var(--color-primary)")}
-                  onBlur={(e) => (e.target.style.borderColor = "var(--color-border)")}
-                />
+            <Card title="Change Password" description="Update your security credentials">
+              <Field label="Current Password" error={pwErrors.old_password}>
+                <PasswordInput name="old_password" value={passwords.old_password} hasError={!!pwErrors.old_password}
+                  onChange={(e) => setPasswords({ ...passwords, old_password: e.target.value })} />
               </Field>
-              <Field label="New Password">
-                <PasswordInput
-                  name="new_password"
-                  value={passwords.new_password}
-                  onChange={(e) => setPasswords({ ...passwords, new_password: e.target.value })}
-                  placeholder="Min. 8 characters"
-                  style={inputStyle}
-                  onFocus={(e) => (e.target.style.borderColor = "var(--color-primary)")}
-                  onBlur={(e) => (e.target.style.borderColor = "var(--color-border)")}
-                />
+              <Field label="New Password" error={pwErrors.new_password} hint="Must be at least 8 characters.">
+                <PasswordInput name="new_password" value={passwords.new_password} hasError={!!pwErrors.new_password}
+                  onChange={(e) => setPasswords({ ...passwords, new_password: e.target.value })} />
               </Field>
-              <Field label="Confirm New Password">
-                <PasswordInput
-                  name="confirm_password"
-                  value={passwords.confirm_password}
-                  onChange={(e) => setPasswords({ ...passwords, confirm_password: e.target.value })}
-                  placeholder="Repeat new password"
-                  style={inputStyle}
-                  onFocus={(e) => (e.target.style.borderColor = "var(--color-primary)")}
-                  onBlur={(e) => (e.target.style.borderColor = "var(--color-border)")}
-                />
+              <Field label="Confirm New Password" error={pwErrors.confirm_new_password || pwErrors.confirm_password}>
+                <PasswordInput name="confirm_password" value={passwords.confirm_password} hasError={!!(pwErrors.confirm_new_password || pwErrors.confirm_password)}
+                  onChange={(e) => setPasswords({ ...passwords, confirm_password: e.target.value })} />
               </Field>
               <SaveButton onClick={handleSavePassword} saving={pwSaving} saved={pwSaved} />
             </Card>
@@ -619,25 +655,26 @@ export default function Settings() {
           <div className="space-y-6 animate-fade-in">
             {/* Shop info */}
             <Card title="Shop Information" description="Update your business entity details">
-              <Field label="Shop Name">
-                <Input name="name" value={shop.name}
+              <Field label="Shop Name" error={shopErrors.name}>
+                <Input name="name" value={shop.name} disabled={!isAdmin} hasError={!!shopErrors.name}
                   onChange={(e) => setShop({ ...shop, name: e.target.value })} />
               </Field>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Phone">
+                <Field label="Phone" error={shopErrors.phone} hint="Required for SMS notifications.">
                   <Input name="phone" value={shop.phone} placeholder="+234901234567 or 901234567"
+                    disabled={!isAdmin} hasError={!!shopErrors.phone}
                     onChange={(e) => setShop({ ...shop, phone: e.target.value })} />
                 </Field>
-                <Field label="Email">
-                  <Input name="email" value={shop.email} type="email"
+                <Field label="Email" error={shopErrors.email}>
+                  <Input name="email" value={shop.email} type="email" disabled={!isAdmin} hasError={!!shopErrors.email}
                     onChange={(e) => setShop({ ...shop, email: e.target.value })} />
                 </Field>
               </div>
-              <Field label="Address">
-                <Input name="address" value={shop.address}
+              <Field label="Physical Address" error={shopErrors.address}>
+                <Input name="address" value={shop.address} disabled={!isAdmin} hasError={!!shopErrors.address}
                   onChange={(e) => setShop({ ...shop, address: e.target.value })} />
               </Field>
-              <Field label="Description (optional)">
+              <Field label="Shop Description" error={shopErrors.description} hint="Displays on customer receipts and invoices.">
                 <textarea
                   value={shop.description}
                   onChange={(e) => setShop({ ...shop, description: e.target.value })}
@@ -726,25 +763,25 @@ export default function Settings() {
                   </p>
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <Field label="First Name">
-                        <Input name="first_name" value={staffForm.first_name}
+                      <Field label="First Name" error={staffErrors.first_name}>
+                        <Input name="first_name" value={staffForm.first_name} hasError={!!staffErrors.first_name}
                           onChange={(e) => setStaffForm({ ...staffForm, first_name: e.target.value })} />
                       </Field>
-                      <Field label="Last Name">
-                        <Input name="last_name" value={staffForm.last_name}
+                      <Field label="Last Name" error={staffErrors.last_name}>
+                        <Input name="last_name" value={staffForm.last_name} hasError={!!staffErrors.last_name}
                           onChange={(e) => setStaffForm({ ...staffForm, last_name: e.target.value })} />
                       </Field>
                     </div>
-                    <Field label="Email Address">
-                      <Input name="email" placeholder="samuel@techstore.com" value={staffForm.email} type="email"
+                    <Field label="Email Address" error={staffErrors.email}>
+                      <Input name="email" placeholder="samuel@techstore.com" value={staffForm.email} type="email" hasError={!!staffErrors.email}
                         onChange={(e) => setStaffForm({ ...staffForm, email: e.target.value })} />
                     </Field>
-                    <Field label="Phone Number (Optional)">
-                      <Input name="phone" value={staffForm.phone} type="tel" placeholder="+234901234567 or 901234567"
-                        onChange={(e: any) => setStaffForm({ ...staffForm, phone: e.target.value })} />
+                    <Field label="Phone Number (Optional)" error={staffErrors.phone}>
+                      <Input name="phone" value={staffForm.phone} type="tel" placeholder="+234901234567 or 901234567" hasError={!!staffErrors.phone}
+                        onChange={(e) => setStaffForm({ ...staffForm, phone: e.target.value })} />
                     </Field>
-                    <Field label="Temporary Password">
-                      <Input name="password" value={staffForm.password} type="password"
+                    <Field label="Temporary Password" error={staffErrors.password}>
+                      <PasswordInput name="password" value={staffForm.password} hasError={!!staffErrors.password}
                         onChange={(e) => setStaffForm({ ...staffForm, password: e.target.value })} />
                     </Field>
                     <Field label="Account Role">
@@ -1145,13 +1182,36 @@ export default function Settings() {
               <input
                 type="text"
                 value={resetPasswordValue}
-                onChange={(e) => setResetPasswordValue(e.target.value)}
+                onChange={(e) => {
+                  setResetPasswordValue(e.target.value);
+                  setResetPasswordErrors((prev) => ({ ...prev, new_password: "", password: "" }));
+                }}
                 placeholder="New password"
                 className="w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-all"
-                style={inputStyle}
-                onFocus={(e) => e.target.style.borderColor = "var(--color-primary)"}
-                onBlur={(e) => e.target.style.borderColor = "var(--color-border)"}
+                style={{
+                  ...inputStyle,
+                  borderColor: resetPasswordErrors.new_password || resetPasswordErrors.password
+                    ? "var(--color-danger, #ef4444)"
+                    : "var(--color-border)",
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor =
+                    resetPasswordErrors.new_password || resetPasswordErrors.password
+                      ? "var(--color-danger, #ef4444)"
+                      : "var(--color-primary)";
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor =
+                    resetPasswordErrors.new_password || resetPasswordErrors.password
+                      ? "var(--color-danger, #ef4444)"
+                      : "var(--color-border)";
+                }}
               />
+              {(resetPasswordErrors.new_password || resetPasswordErrors.password) && (
+                <p className="text-xs mt-1.5 text-red-500 font-medium">
+                  {resetPasswordErrors.new_password || resetPasswordErrors.password}
+                </p>
+              )}
             </div>
 
             <div className="flex gap-3">

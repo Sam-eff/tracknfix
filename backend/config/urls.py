@@ -20,12 +20,15 @@ from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path, re_path
+from django.views.generic import RedirectView
 from django.views.static import serve as media_serve
 from utils.health import healthcheck
 
 API_PREFIX = "api/v1/"
 
 urlpatterns = [
+    path('admin', RedirectView.as_view(url='/tracknfix-ctrl-panel/', permanent=False)),
+    path('admin/', RedirectView.as_view(url='/tracknfix-ctrl-panel/', permanent=False)),
     path('tracknfix-ctrl-panel/', admin.site.urls),
     path(f"{API_PREFIX}health/", healthcheck, name="api-healthcheck"),
     path(f"{API_PREFIX}auth/", include('apps.accounts.urls')),

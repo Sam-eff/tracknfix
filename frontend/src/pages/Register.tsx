@@ -345,7 +345,7 @@ export default function Register() {
 
           <p className="text-center text-sm mt-8" style={{ color: "var(--color-muted)" }}>
             Already have an account?{" "}
-            <Link to="/login" className="font-semibold text-accent hover:text-primary transition-colors">
+            <Link to="/login" className="font-semibold text-primary hover:text-accent transition-colors">
               Sign in
             </Link>
           </p>

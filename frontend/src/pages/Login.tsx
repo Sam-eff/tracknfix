@@ -6,6 +6,7 @@ import { useTheme } from "../context/ThemeContext";
 import api from "../api/axios";
 import { PasswordInput } from "../components/PasswordInput";
 import { PublicLegalLinks } from "../components/PublicLegalLinks";
+import { getApiErrorMessage } from "../utils/http";
 
 export default function Login() {
   const { login } = useAuth();
@@ -29,12 +30,8 @@ export default function Login() {
       const { data } = await api.post("/auth/login/", form);
       login(data.user);
       navigate("/");
-    } catch (err: any) {
-      setError(
-        err.response?.data?.detail ||
-        err.response?.data?.message ||
-        "Invalid email or password."
-      );
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Invalid email or password."));
     } finally {
       setLoading(false);
     }

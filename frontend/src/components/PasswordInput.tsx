@@ -53,6 +53,7 @@ interface PasswordInputProps {
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   required?: boolean;
   disabled?: boolean;
+  hasError?: boolean;
 }
 
 export function PasswordInput({
@@ -66,6 +67,7 @@ export function PasswordInput({
   onBlur,
   required,
   disabled,
+  hasError,
 }: PasswordInputProps) {
   const [show, setShow] = useState(false);
 
@@ -79,10 +81,23 @@ export function PasswordInput({
         placeholder={placeholder}
         required={required}
         disabled={disabled}
-        className={`w-full px-4 py-3 rounded-xl text-sm outline-none transition-all pr-12 ${className}`}
-        style={style}
-        onFocus={onFocus}
-        onBlur={onBlur}
+        className={`w-full px-4 py-3 rounded-xl text-sm outline-none transition-all pr-12 ${
+          hasError ? "border-red-500 focus:border-red-500" : ""
+        } ${className}`}
+        style={{
+          backgroundColor: "var(--color-bg)",
+          border: `1px solid ${hasError ? "var(--color-danger, #ef4444)" : "var(--color-border)"}`,
+          color: "var(--color-text)",
+          ...style
+        }}
+        onFocus={(e) => {
+          e.target.style.borderColor = hasError ? "var(--color-danger, #ef4444)" : "var(--color-primary)";
+          onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          e.target.style.borderColor = hasError ? "var(--color-danger, #ef4444)" : "var(--color-border)";
+          onBlur?.(e);
+        }}
       />
       <PasswordToggle visible={show} onToggle={() => setShow((s) => !s)} />
     </div>
