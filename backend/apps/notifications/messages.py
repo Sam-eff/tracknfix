@@ -38,23 +38,23 @@ The following products in {shop_name} are running low:
 
 Please restock soon to avoid running out.
 
-— TRACKNFIX Inventory Management
+— Giztrack
 """
 
 
 def subscription_expiry_subject():
-    return "Your TRACKNFIX Inventory Management subscription is expiring soon"
+    return "Your Giztrack subscription is expiring soon"
 
 
 def subscription_expiry_body(shop_name, days_remaining, renewal_url=""):
     return f"""Hi,
 
-Your TRACKNFIX Inventory Management subscription for {shop_name} will expire in {days_remaining} day(s).
+Your Giztrack subscription for {shop_name} will expire in {days_remaining} day(s).
 
 To keep full access to your shop, please renew your subscription.
 {f"Renew here: {renewal_url}" if renewal_url else ""}
 
 If you have already renewed, please ignore this message.
 
-— TRACKNFIX Inventory Management
+— Giztrack
 """

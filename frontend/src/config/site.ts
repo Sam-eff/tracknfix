@@ -7,11 +7,11 @@ const cleanEnvValue = (value: unknown) => {
 };
 
 export const SUPPORT_EMAIL =
-  cleanEnvValue(import.meta.env.VITE_SUPPORT_EMAIL) || "support@tracknfix.com";
+  cleanEnvValue(import.meta.env.VITE_SUPPORT_EMAIL) || "support@giztrack.com";
 
 export const SUPPORT_PHONE = cleanEnvValue(import.meta.env.VITE_SUPPORT_PHONE);
 
-export const SUPPORT_EMAIL_LINK = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("TracknFix enquiry")}`;
+export const SUPPORT_EMAIL_LINK = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Giztrack enquiry")}`;
 
 export const SUPPORT_PHONE_LINK = SUPPORT_PHONE
   ? `tel:${SUPPORT_PHONE.replace(/\s+/g, "")}`

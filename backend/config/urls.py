@@ -25,11 +25,14 @@ from django.views.static import serve as media_serve
 from utils.health import healthcheck
 
 API_PREFIX = "api/v1/"
+ADMIN_PANEL_PATH = "/giztrack-ctrl-panel/"
 
 urlpatterns = [
-    path('admin', RedirectView.as_view(url='/tracknfix-ctrl-panel/', permanent=False)),
-    path('admin/', RedirectView.as_view(url='/tracknfix-ctrl-panel/', permanent=False)),
-    path('tracknfix-ctrl-panel/', admin.site.urls),
+    path('admin', RedirectView.as_view(url=ADMIN_PANEL_PATH, permanent=False)),
+    path('admin/', RedirectView.as_view(url=ADMIN_PANEL_PATH, permanent=False)),
+    path('tracknfix-ctrl-panel/', RedirectView.as_view(url=ADMIN_PANEL_PATH, permanent=False)),
+    path('Giztrack-ctrl-panel/', RedirectView.as_view(url=ADMIN_PANEL_PATH, permanent=False)),
+    path('giztrack-ctrl-panel/', admin.site.urls),
     path(f"{API_PREFIX}health/", healthcheck, name="api-healthcheck"),
     path(f"{API_PREFIX}auth/", include('apps.accounts.urls')),
     path(f"{API_PREFIX}shops/", include('apps.shops.urls')),

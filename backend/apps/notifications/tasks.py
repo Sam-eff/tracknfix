@@ -183,7 +183,7 @@ Sales
 Repairs
   - Active repairs: {active_repairs}
 
-— TRACKNFIX Inventory Management
+— Giztrack
 """
         send_mail(
             subject=f"Daily Summary — {yesterday.strftime('%d %b %Y')}",

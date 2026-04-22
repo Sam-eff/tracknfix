@@ -233,8 +233,8 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
 }
 
-AUTH_COOKIE_ACCESS = env("AUTH_COOKIE_ACCESS", default="tracknfix_access")
-AUTH_COOKIE_REFRESH = env("AUTH_COOKIE_REFRESH", default="tracknfix_refresh")
+AUTH_COOKIE_ACCESS = env("AUTH_COOKIE_ACCESS", default="Giztrack_access")
+AUTH_COOKIE_REFRESH = env("AUTH_COOKIE_REFRESH", default="Giztrack_refresh")
 AUTH_COOKIE_SECURE = env.bool("AUTH_COOKIE_SECURE", default=False)
 AUTH_COOKIE_SAMESITE = env("AUTH_COOKIE_SAMESITE", default="Lax")
 AUTH_COOKIE_DOMAIN = env("AUTH_COOKIE_DOMAIN", default=None)
@@ -313,7 +313,7 @@ AT_USERNAME = env("AT_USERNAME", default="sandbox")  # Use 'sandbox' for free te
 AT_SENDER_ID = env("AT_SENDER_ID", default="")        # Optional: custom sender name
 
 
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="TRACKNFIX Inventory Management <noreply@tracknfix.com>")
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Giztrack <noreply@giztrack.com>")
 
 
 # ── Production Security Headers ───────────────────────────────────────────────
