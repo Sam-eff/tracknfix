@@ -36,8 +36,8 @@ export default function ForgotPassword() {
   return (
     <>
       <Helmet>
-        <title>Forgot Password — TracknFix</title>
-        <meta name="description" content="Request a secure password reset link for your TracknFix account." />
+        <title>Forgot Password — Giztrack</title>
+        <meta name="description" content="Request a secure password reset link for your Giztrack account." />
       </Helmet>
       <div className="min-h-screen flex items-center justify-center px-4"
         style={{ backgroundColor: "var(--color-bg)" }}>
@@ -62,9 +62,9 @@ export default function ForgotPassword() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-8 justify-center">
-          <img src="/favicon.png" alt="TracknFix logo" className="w-10 h-10 rounded-xl" />
+          <img src="/favicon.png" alt="Giztrack logo" className="w-10 h-10 rounded-xl" />
           <span className="font-bold text-lg" style={{ color: "var(--color-primary)" }}>
-            TracknFix
+            Giztrack
           </span>
         </div>
 

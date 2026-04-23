@@ -4,16 +4,16 @@ import { LEGAL_LAST_UPDATED, SUPPORT_EMAIL, SUPPORT_EMAIL_LINK } from "../config
 
 const sections = [
   {
-    title: "Agreement to use TracknFix",
+    title: "Agreement to use Giztrack",
     paragraphs: [
-      "These Terms of Service govern your use of TracknFix, including the software platform, billing pages, support channels, and related services made available to your shop.",
+      "These Terms of Service govern your use of Giztrack, including the software platform, billing pages, support channels, and related services made available to your shop.",
       "By creating an account, starting a trial, paying for a plan, or using the service, you agree to these terms on behalf of yourself and the shop or business you represent.",
     ],
   },
   {
     title: "Eligibility and authority",
     paragraphs: [
-      "You may use TracknFix only if you are legally able to enter into a binding agreement under applicable law.",
+      "You may use Giztrack only if you are legally able to enter into a binding agreement under applicable law.",
       "If you register on behalf of a business, you confirm that you have authority to bind that business to these terms.",
     ],
   },
@@ -27,36 +27,36 @@ const sections = [
   {
     title: "Trials, plans, and billing",
     paragraphs: [
-      "TracknFix may offer a free trial period before a paid subscription is required. Trial access, plan features, and pricing may differ between Basic and Pro plans.",
-      "Paid subscriptions are billed through the payment provider used by TracknFix. Renewals, expiration dates, and cancellation timing are managed through the billing workflow available in the app.",
-      "Canceling a subscription stops future renewals. Charges already processed are not automatically reversed unless required by law, mandated by a regulator, or expressly approved by TracknFix.",
+      "Giztrack may offer a free trial period before a paid subscription is required. Trial access, plan features, and pricing may differ between Basic and Pro plans.",
+      "Paid subscriptions are billed through the payment provider used by Giztrack. Renewals, expiration dates, and cancellation timing are managed through the billing workflow available in the app.",
+      "Canceling a subscription stops future renewals. Charges already processed are not automatically reversed unless required by law, mandated by a regulator, or expressly approved by Giztrack.",
     ],
   },
   {
     title: "Acceptable use",
     paragraphs: [
       "You agree not to misuse the platform, interfere with other shops, attempt unauthorized access, upload malicious code, scrape restricted data, or use the service in a way that violates applicable law.",
-      "You must not use TracknFix to store unlawful, fraudulent, abusive, or harmful content, including data that you do not have a right to process.",
+      "You must not use Giztrack to store unlawful, fraudulent, abusive, or harmful content, including data that you do not have a right to process.",
     ],
   },
   {
     title: "Availability and changes",
     paragraphs: [
       "We may improve, update, suspend, restrict, or discontinue parts of the service from time to time in order to maintain, secure, or improve the platform.",
-      "We aim to keep TracknFix available and reliable, but we do not guarantee uninterrupted availability in every situation, including network outages, maintenance, or third-party service failures.",
+      "We aim to keep Giztrack available and reliable, but we do not guarantee uninterrupted availability in every situation, including network outages, maintenance, or third-party service failures.",
     ],
   },
   {
     title: "Data responsibility and records",
     paragraphs: [
-      "TracknFix helps you manage business records, but you remain responsible for reviewing your own reports, inventory counts, debt records, repair information, taxes, and internal business decisions.",
+      "Giztrack helps you manage business records, but you remain responsible for reviewing your own reports, inventory counts, debt records, repair information, taxes, and internal business decisions.",
       "You are responsible for ensuring that the customer and staff data you enter into the platform is collected and used lawfully, and for keeping any records you need for your own accounting, regulatory, or operational purposes.",
     ],
   },
   {
     title: "Consumer rights and Nigerian law",
     paragraphs: [
-      "TracknFix is intended to be operated in a manner consistent with applicable Nigerian law, including consumer protection obligations where they apply to services supplied to users in Nigeria.",
+      "Giztrack is intended to be operated in a manner consistent with applicable Nigerian law, including consumer protection obligations where they apply to services supplied to users in Nigeria.",
       "Nothing in these terms is intended to exclude rights or remedies that cannot lawfully be limited under applicable Nigerian law.",
     ],
   },
@@ -86,10 +86,10 @@ export default function Terms() {
   return (
     <>
       <Helmet>
-        <title>Terms of Service — TracknFix</title>
+        <title>Terms of Service — Giztrack</title>
         <meta
           name="description"
-          content="Read the TracknFix Terms of Service covering account use, subscriptions, billing, and acceptable use."
+          content="Read the Giztrack Terms of Service covering account use, subscriptions, billing, and acceptable use."
         />
       </Helmet>
 
@@ -125,7 +125,7 @@ export default function Terms() {
                 Terms of Service
               </h1>
               <p className="max-w-2xl text-sm sm:text-base leading-7" style={{ color: "var(--color-muted)" }}>
-                These terms explain how shops may use TracknFix, how subscriptions and billing work, and the rules
+                These terms explain how shops may use Giztrack, how subscriptions and billing work, and the rules
                 that help keep the platform secure and reliable for businesses operating in Nigeria.
               </p>
               <p className="text-sm" style={{ color: "var(--color-muted)" }}>

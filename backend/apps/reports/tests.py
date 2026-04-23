@@ -265,7 +265,7 @@ class ReportValidationTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("text/csv", response["Content-Type"])
         content = response.content.decode("utf-8-sig")
-        self.assertIn("TracknFix Analytics Report", content)
+        self.assertIn("Giztrack Analytics Report", content)
         self.assertIn("Sales Breakdown", content)
         self.assertIn("Best Selling Products", content)
         self.assertNotIn("Products,Category,SKU,Brand", content)

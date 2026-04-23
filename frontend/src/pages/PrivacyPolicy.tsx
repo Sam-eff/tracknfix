@@ -6,7 +6,7 @@ const sections = [
   {
     title: "Information we collect",
     paragraphs: [
-      "TracknFix may collect account details, shop details, billing information, customer records, repair records, inventory data, and device or browser information needed to operate the service.",
+      "Giztrack may collect account details, shop details, billing information, customer records, repair records, inventory data, and device or browser information needed to operate the service.",
       "We may also collect contact information when you send enquiries, support requests, or feedback.",
     ],
   },
@@ -27,14 +27,14 @@ const sections = [
   {
     title: "Payments and third parties",
     paragraphs: [
-      "Subscription payments may be processed by third-party payment providers. TracknFix does not store full card details on its own servers.",
+      "Subscription payments may be processed by third-party payment providers. Giztrack does not store full card details on its own servers.",
       "We may rely on service providers for email delivery, error monitoring, hosting, storage, and payment processing where needed to run the platform.",
     ],
   },
   {
     title: "Cookies and authentication",
     paragraphs: [
-      "TracknFix uses secure cookies and related security mechanisms to keep you signed in, protect sessions, and help prevent fraudulent or unauthorized requests.",
+      "Giztrack uses secure cookies and related security mechanisms to keep you signed in, protect sessions, and help prevent fraudulent or unauthorized requests.",
       "Disabling essential cookies may stop important parts of the app from working correctly.",
     ],
   },
@@ -55,7 +55,7 @@ const sections = [
   {
     title: "Cross-border data handling",
     paragraphs: [
-      "Some service providers used to operate TracknFix may process data outside Nigeria. Where that happens, we aim to use appropriate safeguards and reasonable protections consistent with applicable law.",
+      "Some service providers used to operate Giztrack may process data outside Nigeria. Where that happens, we aim to use appropriate safeguards and reasonable protections consistent with applicable law.",
       "Where required, cross-border transfers should be handled in a manner consistent with the Nigeria Data Protection Act, 2023.",
     ],
   },
@@ -85,10 +85,10 @@ export default function PrivacyPolicy() {
   return (
     <>
       <Helmet>
-        <title>Privacy Policy — TracknFix</title>
+        <title>Privacy Policy — Giztrack</title>
         <meta
           name="description"
-          content="Read how TracknFix collects, uses, protects, and stores account, customer, billing, and shop data."
+          content="Read how Giztrack collects, uses, protects, and stores account, customer, billing, and shop data."
         />
       </Helmet>
 
@@ -120,7 +120,7 @@ export default function PrivacyPolicy() {
                 Privacy Policy
               </h1>
               <p className="max-w-2xl text-sm sm:text-base leading-7" style={{ color: "var(--color-muted)" }}>
-                This page explains the information TracknFix collects, why it is used, how it is protected, and how
+                This page explains the information Giztrack collects, why it is used, how it is protected, and how
                 to contact us about privacy-related questions in a Nigeria-facing business context.
               </p>
               <p className="text-sm" style={{ color: "var(--color-muted)" }}>

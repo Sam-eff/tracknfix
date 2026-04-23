@@ -157,7 +157,7 @@ class ShopRegisterView(APIView):
         refresh = RefreshToken.for_user(user)
         response = Response(
             {
-                "message": f"Welcome to TracknFix, {shop.name}!",
+                "message": f"Welcome to Giztrack, {shop.name}!",
                 "user": UserSerializer(user).data,
             },
             status=status.HTTP_201_CREATED,
@@ -342,14 +342,14 @@ class ForgotPasswordView(APIView):
 
             try:
                 send_mail(
-                    subject="Reset your TracknFix password",
+                    subject="Reset your Giztrack password",
                     message=(
                         f"Hi {user.first_name},\n\n"
                         f"We received a request to reset your password.\n"
                         f"Click the link below to set a new password (valid for 3 days):\n\n"
                         f"{reset_link}\n\n"
                         f"If you didn't request this, you can ignore this email.\n\n"
-                        f"— TracknFix"
+                        f"— Giztrack"
                     ),
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[user.email],

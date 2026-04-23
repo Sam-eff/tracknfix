@@ -80,7 +80,7 @@ class SaleViewSet(ShopScopedMixin, viewsets.ModelViewSet):
             except Exception:
                 discount = Decimal(0)
 
-            is_pro = hasattr(shop, 'subscription') and shop.subscription.plan and shop.subscription.plan.name.lower() == 'pro'
+            is_pro = shop.has_pro_access
             
             if discount > 0 and not is_pro:
                 return Response(

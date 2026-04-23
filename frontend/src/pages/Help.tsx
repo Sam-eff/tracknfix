@@ -24,7 +24,7 @@ export default function Help() {
           Help & Instructions
         </h1>
         <p className="text-sm mt-1" style={{ color: "var(--color-muted)" }}>
-          Guidance on how to use TracknFix properly for inventory control, sales, repairs, reporting, and day-to-day shop administration in Nigeria.
+          Guidance on how to use Giztrack properly for inventory control, sales, repairs, reporting, and day-to-day shop administration in Nigeria.
         </p>
       </div>
 
@@ -90,7 +90,7 @@ export default function Help() {
               <div className="space-y-3">
                 <h3 className="font-semibold text-lg" style={{ color: "var(--color-text)" }}>Credit Sales and Customer Balances</h3>
                 <p className="text-sm leading-relaxed" style={{ color: "var(--color-muted)" }}>
-                  If a customer is buying on credit, enable the <strong>Credit Sale</strong> option during checkout and enter the amount paid immediately, if any. TracknFix will record the outstanding balance and keep the debt under that customer profile for later follow-up and payment collection.
+                  If a customer is buying on credit, enable the <strong>Credit Sale</strong> option during checkout and enter the amount paid immediately, if any. Giztrack will record the outstanding balance and keep the debt under that customer profile for later follow-up and payment collection.
                 </p>
               </div>
 

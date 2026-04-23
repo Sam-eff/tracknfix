@@ -453,6 +453,14 @@ export default function Sales() {
   // Reset to page 1 when filters change
   useEffect(() => { setPage(1); }, [dateFrom, dateTo]);
 
+  const maxReturnableQuantity = returningItem
+    ? returningItem.item.quantity - (returningItem.item.returned_quantity || 0)
+    : 0;
+  const parsedReturnQuantity = Number.parseInt(returnQuantity, 10) || 0;
+  const returnRefundAmount = returningItem
+    ? Math.max(0, parsedReturnQuantity) * Number.parseFloat(returningItem.item.unit_price)
+    : 0;
+
   const handleCustomerSelect = (customer: Customer) => {
     setSelectedCustomer(customer);
     setCustomerPhone(customer.phone);
@@ -625,7 +633,7 @@ export default function Sales() {
   return (
     <>
       <Helmet>
-        <title>Point of Sale — TracknFix</title>
+        <title>Point of Sale — Giztrack</title>
         <meta name="description" content="Process unrecorded sales, manage returns, and view sale history." />
       </Helmet>
       <div className="space-y-6 max-w-7xl mx-auto print:hidden">
@@ -688,7 +696,7 @@ export default function Sales() {
 
             <BarcodeScannerNotice
               title="Use the barcode scanner on New Sale"
-              description="Scan while your cursor is not inside any input box. If the scanned code matches a product SKU, TracknFix adds the item to the cart automatically. If the item is not already visible, TracknFix searches for it first."
+              description="Scan while your cursor is not inside any input box. If the scanned code matches a product SKU, Giztrack adds the item to the cart automatically. If the item is not already visible, Giztrack searches for it first."
             />
 
             {/* Product grid */}
@@ -1251,55 +1259,107 @@ export default function Sales() {
       {returningItem && (
         <Modal title="Return Item" onClose={() => setReturningItem(null)}>
           <div className="space-y-4">
-            <div className="p-3 rounded-xl bg-red-50 border border-red-100 mb-2">
-              <p className="text-sm font-semibold text-red-900">
+            <div
+              className="p-4 rounded-2xl mb-2"
+              style={{
+                backgroundColor: "color-mix(in srgb, #dc2626 12%, var(--color-surface))",
+                border: "1px solid color-mix(in srgb, #dc2626 28%, var(--color-border))",
+              }}
+            >
+              <p className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>
                 Returning: {returningItem.item.product_name}
               </p>
-              <p className="text-xs text-red-700 mt-1">
+              <p className="text-xs mt-1" style={{ color: "var(--color-muted)" }}>
                 Refunding {fmt(returningItem.item.unit_price)} per item.
               </p>
+              {parsedReturnQuantity > 0 && (
+                <div
+                  className="mt-3 flex items-center justify-between rounded-xl px-3 py-2 text-sm"
+                  style={{
+                    backgroundColor: "color-mix(in srgb, var(--color-surface) 82%, transparent)",
+                    border: "1px solid var(--color-border)",
+                  }}
+                >
+                  <span style={{ color: "var(--color-muted)" }}>Estimated refund</span>
+                  <span className="font-bold" style={{ color: "#dc2626" }}>
+                    {fmt(returnRefundAmount)}
+                  </span>
+                </div>
+              )}
             </div>
             
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-800">
+              <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-muted)" }}>
                 Quantity to Return
               </label>
               <input
                 type="number"
                 min="1"
-                max={returningItem.item.quantity - (returningItem.item.returned_quantity || 0)}
+                max={maxReturnableQuantity}
                 value={returnQuantity}
                 onChange={(e) => setReturnQuantity(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl text-sm outline-none border border-gray-200"
+                className="w-full px-4 py-2.5 rounded-xl text-sm outline-none"
+                style={inputStyle}
               />
-              <p className="text-[10px] text-gray-500 mt-1">
-                Max available to return: {returningItem.item.quantity - (returningItem.item.returned_quantity || 0)}
+              <p className="text-[11px] mt-1" style={{ color: "var(--color-muted)" }}>
+                Max available to return: {maxReturnableQuantity}
               </p>
             </div>
 
             {/* Only show restock option for physical products */}
             {!returningItem.item.is_custom && (
-              <label className="flex items-center gap-2 mt-4 p-3 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors">
+              <label
+                className="flex items-start gap-3 mt-4 p-3 rounded-2xl cursor-pointer transition-colors"
+                style={{
+                  backgroundColor: "var(--color-bg)",
+                  border: "1px solid var(--color-border)",
+                }}
+              >
                 <input
                   type="checkbox"
                   checked={returnRestock}
                   onChange={(e) => setReturnRestock(e.target.checked)}
-                  className="w-4 h-4 text-primary rounded border-gray-300"
+                  className="mt-0.5 h-4 w-4 rounded"
+                  style={{ accentColor: "var(--color-primary)" }}
                 />
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-gray-900">Restock Item</p>
-                  <p className="text-xs text-gray-500">Add the returned quantity back into your inventory.</p>
+                  <p className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>
+                    Restock Item
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--color-muted)" }}>
+                    Add the returned quantity back into your inventory.
+                  </p>
                 </div>
               </label>
             )}
 
-            <button
-              onClick={handleReturnItem}
-              disabled={returnSubmitting || !returnQuantity || parseInt(returnQuantity) < 1}
-              className="w-full mt-4 py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50"
-              style={{ background: "#dc2626" }}>
-              {returnSubmitting ? "Processing..." : "Confirm Return"}
-            </button>
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setReturningItem(null)}
+                disabled={returnSubmitting}
+                className="flex-1 py-3 rounded-xl font-semibold transition-colors disabled:opacity-60"
+                style={{
+                  backgroundColor: "var(--color-bg)",
+                  border: "1px solid var(--color-border)",
+                  color: "var(--color-text)",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReturnItem}
+                disabled={
+                  returnSubmitting ||
+                  !returnQuantity ||
+                  parsedReturnQuantity < 1 ||
+                  parsedReturnQuantity > maxReturnableQuantity
+                }
+                className="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50"
+                style={{ background: "#dc2626" }}
+              >
+                {returnSubmitting ? "Processing..." : "Confirm Return"}
+              </button>
+            </div>
           </div>
         </Modal>
       )}

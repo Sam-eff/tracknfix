@@ -59,7 +59,7 @@ export default function OfflineNotice() {
       <p className="mt-1 text-xs opacity-90">
         {isOffline
           ? "You can open cached pages, but new sales, repairs, billing updates, and sync actions need internet access."
-          : "TracknFix can sync live data normally again."}
+          : "Giztrack can sync live data normally again."}
       </p>
     </div>
   );

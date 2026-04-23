@@ -40,8 +40,8 @@ export default function Login() {
   return (
     <>
       <Helmet>
-        <title>Login — TracknFix</title>
-        <meta name="description" content="Sign in to your TracknFix account to manage your tech shop." />
+        <title>Login — Giztrack</title>
+        <meta name="description" content="Sign in to your Giztrack account to manage your tech shop." />
       </Helmet>
     <div className="min-h-screen flex" style={{ backgroundColor: "var(--color-bg)" }}>
 
@@ -63,8 +63,8 @@ export default function Login() {
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <img src="/favicon.png" alt="TracknFix logo" className="w-10 h-10 rounded-xl" />
-            <span className="text-primary font-display font-bold text-lg">TracknFix Inventory Management</span>
+            <img src="/favicon.png" alt="Giztrack logo" className="w-10 h-10 rounded-xl" />
+            <span className="text-primary font-display font-bold text-lg">Giztrack</span>
           </div>
 
           {/* Center content */}
@@ -93,7 +93,7 @@ export default function Login() {
             </div>
           </div>
 
-          <p className="text-slate-600 text-sm">© 2026 TracknFix</p>
+          <p className="text-slate-600 text-sm">© 2026 Giztrack</p>
         </div>
       </div>
 
@@ -120,9 +120,9 @@ export default function Login() {
         <div className="w-full max-w-md mx-auto">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-10">
-            <img src="/favicon.png" alt="TracknFix logo" className="w-9 h-9 rounded-xl" />
+            <img src="/favicon.png" alt="Giztrack logo" className="w-9 h-9 rounded-xl" />
             <span className="font-display font-bold text-base" style={{ color: "var(--color-primary)" }}>
-              TracknFix Inventory Management
+              Giztrack
             </span>
           </div>
 

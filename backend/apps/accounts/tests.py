@@ -137,7 +137,7 @@ class AuthSecurityTests(APITestCase):
             "/api/v1/auth/bootstrap-admin/",
             {
                 "bootstrap_token": "bootstrap-secret",
-                "email": "owner@tracknfix.com",
+                "email": "owner@Giztrack.com",
                 "first_name": "Root",
                 "last_name": "Admin",
                 "password": "StrongPass123!",
@@ -146,13 +146,13 @@ class AuthSecurityTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(CustomUser.objects.filter(email="owner@tracknfix.com", is_superuser=True).exists())
+        self.assertTrue(CustomUser.objects.filter(email="owner@Giztrack.com", is_superuser=True).exists())
 
         second_response = self.client.post(
             "/api/v1/auth/bootstrap-admin/",
             {
                 "bootstrap_token": "bootstrap-secret",
-                "email": "owner2@tracknfix.com",
+                "email": "owner2@Giztrack.com",
                 "first_name": "Another",
                 "last_name": "Admin",
                 "password": "StrongPass123!",

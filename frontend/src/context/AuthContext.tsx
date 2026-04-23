@@ -21,7 +21,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
-const LAST_KNOWN_USER_KEY = "tracknfix:last-known-user";
+const LAST_KNOWN_USER_KEY = "Giztrack:last-known-user";
 
 const readCachedUser = (): User | null => {
   if (typeof window === "undefined") {

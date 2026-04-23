@@ -61,8 +61,8 @@ class IsSameShop(BasePermission):
 
 
 class IsProPlan(BasePermission):
-    """Only shops with an active Pro plan can access this resource."""
-    message = "This feature requires the Pro plan."
+    """Only shops with Pro access can access this resource."""
+    message = "This feature requires Pro access."
 
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:

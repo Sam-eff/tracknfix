@@ -852,7 +852,7 @@ export default function Settings() {
                     style={{ color: "var(--color-text)" }}
                   />
                   <p className="text-xs mt-2" style={{ color: "var(--color-muted)" }}>
-                    Upload a TracknFix backup ZIP to inspect the datasets and sample rows before any restore step.
+                    Upload a Giztrack backup ZIP to inspect the datasets and sample rows before any restore step.
                   </p>
                 </div>
 

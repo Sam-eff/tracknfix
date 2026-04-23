@@ -430,7 +430,7 @@ export default function Inventory() {
   return (
     <>
       <Helmet>
-        <title>Inventory — TracknFix</title>
+        <title>Inventory — Giztrack</title>
         <meta name="description" content="Manage your products, track stock levels, and organize items by category." />
       </Helmet>
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -514,7 +514,7 @@ export default function Inventory() {
 
       <BarcodeScannerNotice
         title="Use the barcode scanner on Inventory"
-        description="Scan while your cursor is not inside any form field. If the SKU matches a product, TracknFix opens that item for review or editing. If it is not on the current page, the scanned code is used to search for it."
+        description="Scan while your cursor is not inside any form field. If the SKU matches a product, Giztrack opens that item for review or editing. If it is not on the current page, the scanned code is used to search for it."
       />
 
       {/* Table */}

@@ -1,6 +1,6 @@
 {
-  "name": "TracknFix",
-  "short_name": "TracknFix",
+  "name": "Giztrack",
+  "short_name": "Giztrack",
   "description": "Inventory, sales, repairs and customer management for Nigerian tech shops.",
   "start_url": "/",
   "scope": "/",

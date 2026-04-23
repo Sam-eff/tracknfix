@@ -16,7 +16,7 @@ jobs:
     env:
       SECRET_KEY: test-secret-key
       DEBUG: "False"
-      DATABASE_URL: sqlite:////tmp/tracknfix-ci.sqlite3
+      DATABASE_URL: sqlite:////tmp/Giztrack-ci.sqlite3
       REDIS_URL: redis://localhost:6379/0
       FRONTEND_URL: http://localhost:5173
       BACKEND_URL: http://localhost:8000

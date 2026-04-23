@@ -227,7 +227,7 @@ export default function Customers() {
   return (
     <>
       <Helmet>
-        <title>Customers — TracknFix</title>
+        <title>Customers — Giztrack</title>
         <meta name="description" content="Manage your customer database and view their history." />
       </Helmet>
     <div className="space-y-6 max-w-7xl mx-auto">

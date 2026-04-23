@@ -811,7 +811,7 @@ export default function Repairs() {
   return (
     <>
       <Helmet>
-        <title>Repair Tickets — TracknFix</title>
+        <title>Repair Tickets — Giztrack</title>
         <meta name="description" content="Manage repair tickets, track status, and add spare parts." />
       </Helmet>
       <div className="space-y-6 max-w-7xl mx-auto print:hidden">

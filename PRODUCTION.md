@@ -1,6 +1,6 @@
-# TracknFix Production Rollout
+# Giztrack Production Rollout
 
-This file is the practical rollout guide for moving TracknFix from local/staging to production.
+This file is the practical rollout guide for moving Giztrack from local/staging to production.
 
 ## 1. Minimum Production Services
 

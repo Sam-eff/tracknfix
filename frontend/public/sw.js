@@ -1,4 +1,4 @@
-const VERSION = "tracknfix-v1";
+const VERSION = "Giztrack-v1";
 const SHELL_CACHE = `${VERSION}-shell`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const APP_SHELL = [

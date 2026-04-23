@@ -243,7 +243,7 @@ export default function Layout() {
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-6 border-b"
         style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-        <img src="/favicon.png" alt="TracknFix logo" className="w-9 h-9 rounded-xl shrink-0" />
+        <img src="/favicon.png" alt="Giztrack logo" className="w-9 h-9 rounded-xl shrink-0" />
         <div className="min-w-0">
           <p className="text-white font-display font-bold text-sm truncate">
             {user?.shop_name || "Tech Shop"}

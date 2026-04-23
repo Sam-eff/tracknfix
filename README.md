@@ -1,5 +1,5 @@
 ---
-title: TracknFix Backend
+title: Giztrack Backend
 emoji: 🛠️
 colorFrom: blue
 colorTo: indigo
@@ -7,7 +7,7 @@ sdk: docker
 app_port: 7860
 ---
 
-# 🛠️ TracknFix
+# 🛠️ Giztrack
 
 > A full-stack SaaS point-of-sale and workshop management platform built for tech repair shops in Nigeria.
 
@@ -15,15 +15,15 @@ app_port: 7860
 
 ## 📋 Table of Contents
 
-1. [What is TracknFix?](#what-is--manager)
+1. [What is Giztrack?](#what-is--manager)
 2. [Key Features](#key-features)
 3. [Tech Stack](#tech-stack)
 
 ---
 
-## What is TracknFix?
+## What is Giztrack?
 
-**TracknFix** (codenamed `TRACKNFIX Inventory Management`) is a multi-tenant SaaS platform designed specifically for **tech gadget repair shops** in Nigeria. It provides everything a shop owner needs to run their business digitally:
+**Giztrack** (codenamed `Giztrack Inventory Management`) is a multi-tenant SaaS platform designed specifically for **tech gadget repair shops** in Nigeria. It provides everything a shop owner needs to run their business digitally:
 
 - 📦 **Inventory** — track stock, set low-stock alerts, manage categories
 - 🛒 **Point of Sale** — process transactions, auto-deduct stock, record profit
@@ -93,7 +93,7 @@ app_port: 7860
 
 ## Local Docker Modes
 
-TracknFix now has two separate local Docker workflows:
+Giztrack now has two separate local Docker workflows:
 
 - `http://localhost/`
   This is the production-like Docker stack from [docker-compose.yml](/Users/samuel/Documents/Techshopmananger/docker-compose.yml). Frontend changes require a rebuild because Nginx serves a built bundle.

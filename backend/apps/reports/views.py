@@ -536,7 +536,7 @@ def read_backup_zip(uploaded_file, required_files=None):
     try:
         archive = ZipFile(uploaded_file)
     except BadZipFile as exc:
-        raise serializers.ValidationError("Upload a valid TracknFix backup ZIP file.") from exc
+        raise serializers.ValidationError("Upload a valid Giztrack backup ZIP file.") from exc
 
     file_map = {
         member.split("/")[-1]: member
@@ -1047,7 +1047,7 @@ def build_shop_backup_zip_response(filename, payload):
     }
 
     readme_lines = [
-        "TracknFix Shop Backup",
+        "Giztrack Shop Backup",
         f"Shop: {shop.name}",
         f"Generated At: {generated_at}",
         "",
@@ -1859,7 +1859,7 @@ class ExportAnalyticsReportView(APIView):
         payload = get_report_export_payload(shop, period, date_from, date_to)
         generated_at = timezone.now()
         sections = build_report_export_sections(payload)
-        title = f"TracknFix Analytics Report - {shop.name}"
+        title = f"Giztrack Analytics Report - {shop.name}"
         subtitle_lines = [
             f"Generated At: {format_datetime(generated_at)}",
             f"Period: {period.capitalize()}",
@@ -1903,7 +1903,7 @@ class ExportShopBackupView(APIView):
         if fmt == "pdf":
             return build_pdf_response(
                 f"shop_backup_{generated_at.date()}.pdf",
-                f"TracknFix Shop Backup - {shop.name}",
+                f"Giztrack Shop Backup - {shop.name}",
                 [
                     f"Generated At: {format_datetime(generated_at)}",
                     "Use the ZIP backup for spreadsheet-ready files.",

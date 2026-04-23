@@ -158,7 +158,7 @@ export default function Dashboard() {
   return (
     <>
       <Helmet>
-        <title>Dashboard — TracknFix</title>
+        <title>Dashboard — Giztrack</title>
         <meta name="description" content="View your shop's performance, recent sales, and pending repairs at a glance." />
       </Helmet>
       <div className="space-y-6 animate-in fade-in slide-in-bottom-4 duration-500 pb-20 lg:pb-0">

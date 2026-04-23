@@ -3,7 +3,7 @@ from celery import Celery
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
-app = Celery("TRACKNFIX Inventory Management")
+app = Celery("Giztrack Inventory Management")
 
 # Read config from Django settings, using the CELERY_ namespace
 app.config_from_object("django.conf:settings", namespace="CELERY")

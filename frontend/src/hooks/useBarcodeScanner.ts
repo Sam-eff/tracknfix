@@ -13,7 +13,7 @@ interface UseBarcodeScannerProps {
   maxIntervalMs?: number;
 }
 
-export const BARCODE_SCAN_EVENT = "tracknfix:barcode-scan";
+export const BARCODE_SCAN_EVENT = "Giztrack:barcode-scan";
 
 export function dispatchSimulatedBarcodeScan(barcode: string) {
   if (typeof window === "undefined") {
