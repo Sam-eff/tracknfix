@@ -1,4 +1,4 @@
-const BACKEND_ORIGIN = "https://sam-eff-Giztrack-backend.hf.space";
+const BACKEND_ORIGIN = "https://sam-eff-tracknfix-backend.hf.space";
 
 const EXCLUDED_REQUEST_HEADERS = new Set([
   "host",
