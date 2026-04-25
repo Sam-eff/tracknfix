@@ -29,18 +29,30 @@ function Modal({ title, onClose, children }: {
   onClose: () => void;
   children: React.ReactNode;
 }) {
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4"
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 sm:px-4"
       style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
-      <div className="w-full max-w-lg rounded-2xl shadow-xl flex flex-col"
+      <div className="w-full max-w-lg rounded-t-3xl sm:rounded-2xl shadow-xl flex flex-col"
         style={{
           backgroundColor: "var(--color-surface)",
           border: "1px solid var(--color-border)",
-          maxHeight: "90vh",
+          maxHeight: "calc(100dvh - 0.5rem)",
         }}>
+        <div className="flex justify-center pt-3 sm:hidden">
+          <span className="h-1.5 w-14 rounded-full" style={{ backgroundColor: "var(--color-border)" }} />
+        </div>
         {/* Header — fixed */}
-        <div className="flex items-center justify-between px-6 py-4 border-b shrink-0"
-          style={{ borderColor: "var(--color-border)" }}>
+        <div className="sticky top-0 z-10 flex items-center justify-between px-4 sm:px-6 py-4 border-b shrink-0"
+          style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-surface)" }}>
           <h2 className="font-display font-bold text-base" style={{ color: "var(--color-text)" }}>
             {title}
           </h2>
@@ -54,7 +66,7 @@ function Modal({ title, onClose, children }: {
         </div>
 
         {/* Body — scrollable */}
-        <div className="px-6 py-5 overflow-y-auto">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 overflow-y-auto touch-scroll">
           {children}
         </div>
       </div>
@@ -764,7 +776,7 @@ export default function Inventory() {
         >
           <div className="space-y-4">
             {/* Row 1 — name + sku */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Product Name" error={formErrors.name}>
                 <Input name="name" value={productForm.name} onChange={handleProductChange}
                   placeholder="HP Laptop Charger" />
@@ -776,7 +788,7 @@ export default function Inventory() {
             </div>
 
             {/* Row 2 — brand + model */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Brand (optional)">
                 <Input name="brand" value={productForm.brand} onChange={handleProductChange}
                   placeholder="HP, Samsung, Apple" />
@@ -788,7 +800,7 @@ export default function Inventory() {
             </div>
 
             {/* Row 3 — color + image */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Color (optional)">
                 <Input name="color" value={productForm.color} onChange={handleProductChange}
                   placeholder="Black, Silver, Red" />
@@ -831,7 +843,7 @@ export default function Inventory() {
             </Field>
 
             {/* Prices */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Cost Price (₦)" error={formErrors.cost_price}
                 hint={productForm.cost_price ? `Preview: ₦${Number(productForm.cost_price).toLocaleString("en-NG")}` : undefined}>
                 <Input name="cost_price" value={productForm.cost_price}

@@ -339,7 +339,7 @@ export default function Layout() {
   );
 
   return (
-    <div className="flex h-screen overflow-hidden print:h-auto print:overflow-visible border-none bg-white min-h-screen" style={{ backgroundColor: "var(--color-bg)" }}>
+    <div className="flex min-h-[100dvh] lg:h-screen lg:overflow-hidden print:h-auto print:overflow-visible border-none bg-white" style={{ backgroundColor: "var(--color-bg)" }}>
 
       {/* Mobile overlay */}
       {sidebarOpen && (
@@ -365,7 +365,7 @@ export default function Layout() {
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden print:overflow-visible print:bg-white">
+      <div className="flex-1 flex flex-col min-w-0 lg:overflow-hidden print:overflow-visible print:bg-white">
 
         {/* Top bar — mobile only */}
         <header className="lg:hidden flex items-center justify-between px-4 py-3 border-b print:hidden"
@@ -386,7 +386,7 @@ export default function Layout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 print:p-0 print:overflow-visible print:bg-white min-w-0" style={{ backgroundColor: "var(--color-bg)" }}>
+        <main className="flex-1 overflow-visible lg:overflow-y-auto overflow-x-hidden touch-scroll p-4 sm:p-6 print:p-0 print:overflow-visible print:bg-white min-w-0" style={{ backgroundColor: "var(--color-bg)" }}>
           {isLocked && location.pathname !== "/billing" && location.pathname !== "/settings" ? (
             <HardLockScreen />
           ) : (

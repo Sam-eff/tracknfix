@@ -40,6 +40,7 @@
   html {
     scrollbar-gutter: stable;
     background-color: var(--color-bg);
+    overflow-x: hidden;
   }
 
   * { box-sizing: border-box; }
@@ -53,11 +54,14 @@
     color: var(--color-text);
     transition: background-color 0.2s, color 0.2s;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    overscroll-behavior-y: contain;
   }
 
   #root {
     min-height: 100vh;
     min-height: 100dvh;
+    overflow-x: hidden;
   }
 
   h1, h2, h3, h4, h5 {
@@ -108,4 +112,27 @@
     color: var(--color-text);
     border-radius: 0.75rem;
   }
+
+  button,
+  a,
+  label {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button {
+    touch-action: manipulation;
+  }
+}
+
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }

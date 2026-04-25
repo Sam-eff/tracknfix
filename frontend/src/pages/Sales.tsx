@@ -33,17 +33,29 @@ interface ReceiptShop {
 function Modal({ title, onClose, children }: {
   title: string; onClose: () => void; children: React.ReactNode;
 }) {
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 print:inset-auto print:relative print:bg-transparent print:p-0"
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 sm:px-4 print:inset-auto print:relative print:bg-transparent print:p-0"
       style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
-      <div className="w-full max-w-lg rounded-2xl shadow-xl flex flex-col print:shadow-none print:border-none print:w-auto print:max-h-full"
+      <div className="w-full max-w-lg rounded-t-3xl sm:rounded-2xl shadow-xl flex flex-col print:shadow-none print:border-none print:w-auto print:max-h-full"
         style={{
           backgroundColor: "var(--color-surface)",
           border: "1px solid var(--color-border)",
-          maxHeight: "90vh",
+          maxHeight: "calc(100dvh - 0.5rem)",
         }}>
-        <div className="flex items-center justify-between px-6 py-4 border-b shrink-0 print:hidden"
-          style={{ borderColor: "var(--color-border)" }}>
+        <div className="flex justify-center pt-3 sm:hidden print:hidden">
+          <span className="h-1.5 w-14 rounded-full" style={{ backgroundColor: "var(--color-border)" }} />
+        </div>
+        <div className="sticky top-0 z-10 flex items-center justify-between px-4 sm:px-6 py-4 border-b shrink-0 print:hidden"
+          style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-surface)" }}>
           <h2 className="font-display font-bold text-base" style={{ color: "var(--color-text)" }}>
             {title}
           </h2>
@@ -53,7 +65,7 @@ function Modal({ title, onClose, children }: {
             </svg>
           </button>
         </div>
-        <div className="px-6 py-5 overflow-y-auto print:overflow-visible print:p-0">{children}</div>
+        <div className="px-4 sm:px-6 py-4 sm:py-5 overflow-y-auto touch-scroll print:overflow-visible print:p-0">{children}</div>
       </div>
     </div>
   );
@@ -762,7 +774,7 @@ export default function Sales() {
           </div>
 
           {/* Cart */}
-          <div className="rounded-2xl flex flex-col border border-app bg-surface lg:sticky lg:top-[80px] lg:h-[calc(100vh-120px)] h-[80vh]">
+          <div className="rounded-2xl flex flex-col border border-app bg-surface lg:sticky lg:top-[80px] lg:h-[calc(100vh-120px)] min-h-0 overflow-hidden">
 
             {/* ── Cart header (always visible) ── */}
             <div className="px-5 py-4 border-b shrink-0 flex items-center justify-between"
@@ -786,7 +798,7 @@ export default function Sales() {
             </div>
 
             {/* ── Scrollable body: items + all form fields ── */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 lg:overflow-y-auto touch-scroll">
 
               {/* Cart items */}
               <div className="px-4 py-3 space-y-2">
