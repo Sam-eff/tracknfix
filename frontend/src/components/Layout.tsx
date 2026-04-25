@@ -4,6 +4,7 @@ import { Outlet, NavLink, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import api from "../api/axios";
+import { clearPostAuthRedirect } from "../utils/navigation";
 
 
 
@@ -233,6 +234,7 @@ export default function Layout() {
     } catch {
       // proceed even if blacklist fails
     } finally {
+      clearPostAuthRedirect();
       logout();
       navigate("/login");
     }

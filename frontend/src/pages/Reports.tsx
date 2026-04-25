@@ -125,54 +125,103 @@ function StockMovementsTab() {
   return (
     <div className="space-y-6">
       <div className="bg-surface border border-app rounded-2xl overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-app">
-            <tr>
-              <th className="px-5 py-4 text-xs font-bold uppercase tracking-widest text-muted">Item</th>
-              <th className="px-5 py-4 text-xs font-bold uppercase tracking-widest text-muted">Movement</th>
-              <th className="px-5 py-4 text-xs font-bold uppercase tracking-widest text-muted">Reason</th>
-              <th className="px-5 py-4 text-xs font-bold uppercase tracking-widest text-muted">Staff</th>
-              <th className="px-5 py-4 text-xs font-bold uppercase tracking-widest text-muted">Date</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-app">
-            {logs.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-5 py-10 text-center text-muted font-medium">
-                  No stock movements recorded yet.
-                </td>
-              </tr>
-            ) : (
-              logs.map((log) => (
-                <tr key={log.id} className="hover:bg-app/50 transition-colors">
-                  <td className="px-5 py-4">
-                    <p className="font-bold text-sm text-app">{log.product_name}</p>
-                    <p className="text-xs text-muted mt-0.5">{log.quantity_after} units left</p>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className="text-xs font-black px-2.5 py-1 rounded-lg"
+        {logs.length === 0 ? (
+          <div className="px-5 py-10 text-center text-muted font-medium">
+            No stock movements recorded yet.
+          </div>
+        ) : (
+          <>
+            <div className="divide-y divide-app md:hidden">
+              {logs.map((log) => (
+                <div key={log.id} className="p-4 space-y-3 bg-surface">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-bold text-sm text-app break-words">{log.product_name}</p>
+                      <p className="text-xs text-muted mt-0.5">{log.quantity_after} units left</p>
+                    </div>
+                    <span
+                      className="shrink-0 text-xs font-black px-2.5 py-1 rounded-lg whitespace-nowrap"
                       style={{
                         backgroundColor: log.change_amount > 0 ? "#dcfce7" : "#fef2f2",
                         color: log.change_amount > 0 ? "#166534" : "#dc2626",
-                      }}>
+                      }}
+                    >
                       {log.change_amount > 0 ? `+${log.change_amount}` : log.change_amount}
                     </span>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className="text-sm font-medium text-app">{log.reason_display || log.reason}</span>
-                    {log.note && <p className="text-xs text-muted mt-0.5">{log.note}</p>}
-                  </td>
-                  <td className="px-5 py-4 text-sm text-app font-medium">{log.created_by_name || "—"}</td>
-                  <td className="px-5 py-4 text-sm text-muted">
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-muted">Reason</p>
+                      <p className="mt-1 font-medium text-app break-words">{log.reason_display || log.reason}</p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-muted">Staff</p>
+                      <p className="mt-1 font-medium text-app break-words">{log.created_by_name || "—"}</p>
+                    </div>
+                  </div>
+
+                  {log.note && (
+                    <div className="rounded-xl border border-app bg-app px-3 py-2">
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-muted">Note</p>
+                      <p className="mt-1 text-sm text-app break-words">{log.note}</p>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-muted">
                     {new Date(log.created_at).toLocaleString("en-GB", {
-                      dateStyle: "short", timeStyle: "short"
+                      dateStyle: "short",
+                      timeStyle: "short",
                     })}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full min-w-[760px] text-left">
+                <thead className="bg-app">
+                  <tr>
+                    <th className="px-5 py-4 text-xs font-bold uppercase tracking-widest text-muted">Item</th>
+                    <th className="px-5 py-4 text-xs font-bold uppercase tracking-widest text-muted whitespace-nowrap">Movement</th>
+                    <th className="px-5 py-4 text-xs font-bold uppercase tracking-widest text-muted">Reason</th>
+                    <th className="px-5 py-4 text-xs font-bold uppercase tracking-widest text-muted">Staff</th>
+                    <th className="px-5 py-4 text-xs font-bold uppercase tracking-widest text-muted whitespace-nowrap">Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-app">
+                  {logs.map((log) => (
+                    <tr key={log.id} className="hover:bg-app/50 transition-colors">
+                      <td className="px-5 py-4">
+                        <p className="font-bold text-sm text-app">{log.product_name}</p>
+                        <p className="text-xs text-muted mt-0.5">{log.quantity_after} units left</p>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="text-xs font-black px-2.5 py-1 rounded-lg whitespace-nowrap"
+                          style={{
+                            backgroundColor: log.change_amount > 0 ? "#dcfce7" : "#fef2f2",
+                            color: log.change_amount > 0 ? "#166534" : "#dc2626",
+                          }}>
+                          {log.change_amount > 0 ? `+${log.change_amount}` : log.change_amount}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="text-sm font-medium text-app">{log.reason_display || log.reason}</span>
+                        {log.note && <p className="text-xs text-muted mt-0.5">{log.note}</p>}
+                      </td>
+                      <td className="px-5 py-4 text-sm text-app font-medium">{log.created_by_name || "—"}</td>
+                      <td className="px-5 py-4 text-sm text-muted whitespace-nowrap">
+                        {new Date(log.created_at).toLocaleString("en-GB", {
+                          dateStyle: "short", timeStyle: "short"
+                        })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </div>
       <Pagination count={count} page={page} pageSize={20} onChange={setPage} />
     </div>
@@ -424,11 +473,11 @@ export default function Reports() {
       {tab === "overview" ? (
         <>
           {/* Control Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-4 bg-surface p-2 border border-app rounded-2xl shadow-sm">
+          <div className="flex flex-col gap-4 bg-surface p-3 border border-app rounded-2xl shadow-sm lg:flex-row lg:items-center lg:justify-between">
         <div className="flex gap-2 p-1 overflow-x-auto">
           {(["daily", "weekly", "monthly"] as const).map((p) => (
             <button key={p} onClick={() => handlePeriodChange(p)}
-              className="px-5 py-2 rounded-xl text-sm font-bold capitalize transition-all"
+              className="px-5 py-2 rounded-xl text-sm font-bold capitalize transition-all shrink-0"
               style={{
                 backgroundColor: period === p ? "var(--color-primary)" : "transparent",
                 color: period === p ? "white" : "var(--color-muted)",
@@ -438,20 +487,20 @@ export default function Reports() {
           ))}
         </div>
 
-        <div className="flex items-center gap-3 pr-2">
-          <div className="flex items-center gap-2">
+        <div className="flex w-full flex-col gap-3 pr-0 lg:w-auto lg:flex-row lg:items-center lg:pr-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center">
             <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
-              className="px-4 py-2 flex-1 rounded-xl text-sm outline-none font-medium" style={inputStyle} />
-            <span className="text-sm font-bold text-muted px-1">to</span>
+              className="px-4 py-2 w-full rounded-xl text-sm outline-none font-medium min-w-0" style={inputStyle} />
+            <span className="text-sm font-bold text-muted px-1 text-center">to</span>
             <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
-              className="px-4 py-2 flex-1 rounded-xl text-sm outline-none font-medium" style={inputStyle} />
+              className="px-4 py-2 w-full rounded-xl text-sm outline-none font-medium min-w-0" style={inputStyle} />
           </div>
 
           <div className="relative" ref={exportRef}>
             <button
               onClick={() => setExportOpen((o) => !o)}
               disabled={exporting}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all bg-primary/10 text-primary hover:bg-primary/20"
+              className="flex w-full items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all bg-primary/10 text-primary hover:bg-primary/20 lg:w-auto"
               style={{ opacity: exporting ? 0.6 : 1 }}>
               {exporting ? (
                 <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -467,7 +516,7 @@ export default function Reports() {
             </button>
 
             {exportOpen && (
-              <div className="absolute right-0 top-full mt-2 w-48 z-50 rounded-2xl shadow-2xl p-2 overflow-hidden bg-surface border-app border">
+              <div className="absolute right-0 top-full mt-2 w-full min-w-[12rem] z-50 rounded-2xl shadow-2xl p-2 overflow-hidden bg-surface border-app border lg:w-48">
                 {(["csv", "pdf"] as const).map((fmt) => (
                   <button key={fmt} onClick={() => handleExport(fmt)}
                     className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-left transition-colors hover:bg-primary/10 hover:text-primary text-app">
@@ -551,62 +600,110 @@ export default function Reports() {
                 <p className="font-medium text-muted">No outstanding customer credit in this date range.</p>
               </div>
             ) : (
-              <div className="w-full overflow-x-auto overflow-y-hidden rounded-2xl border border-app">
-                <table className="w-full min-w-[920px] text-left bg-surface">
-                  <thead className="bg-app">
-                    <tr>
-                      {[
-                        "Customer",
-                        "Contact",
-                        "Credit Sales",
-                        "Credit Amount",
-                        "Amount Paid",
-                        "Amount Owed",
-                        "Last Credit Sale",
-                      ].map((heading) => (
-                        <th key={heading} className="px-5 py-4 text-xs font-bold uppercase tracking-widest text-muted">
-                          {heading}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-app">
-                    {creditCustomers.map((customer) => (
-                      <tr key={customer.customer_id} className="hover:bg-app/50 transition-colors">
-                        <td className="px-5 py-4">
-                          <div className="font-bold text-sm text-app">{customer.customer_name}</div>
-                          <div className="text-xs text-muted mt-0.5">
-                            ID #{customer.customer_id}
-                          </div>
-                        </td>
-                        <td className="px-5 py-4">
-                          <div className="text-sm font-medium text-app">{customer.phone || "—"}</div>
-                          <div className="text-xs text-muted mt-0.5">{customer.email || "No email"}</div>
-                        </td>
-                        <td className="px-5 py-4 text-sm font-semibold text-app">
-                          {customer.credit_sales_count}
-                        </td>
-                        <td className="px-5 py-4 text-sm font-semibold text-app">
-                          {fmt(customer.total_credit_amount)}
-                        </td>
-                        <td className="px-5 py-4 text-sm font-semibold text-green-700 dark:text-green-400">
-                          {fmt(customer.total_paid)}
-                        </td>
-                        <td className="px-5 py-4">
-                          <span className="inline-flex rounded-lg bg-red-100 px-3 py-1 text-sm font-black text-red-700 dark:bg-red-900/40 dark:text-red-400">
-                            {fmt(customer.total_owed)}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 text-sm font-medium text-muted">
-                          {new Date(customer.last_credit_sale_at).toLocaleDateString("en-GB", {
-                            dateStyle: "medium",
-                          })}
-                        </td>
+              <>
+                <div className="space-y-3 md:hidden">
+                  {creditCustomers.map((customer) => (
+                    <div key={customer.customer_id} className="rounded-2xl border border-app bg-surface p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="font-bold text-sm text-app break-words">{customer.customer_name}</div>
+                          <div className="text-xs text-muted mt-0.5">ID #{customer.customer_id}</div>
+                        </div>
+                        <span className="inline-flex rounded-lg bg-red-100 px-3 py-1 text-sm font-black text-red-700 dark:bg-red-900/40 dark:text-red-400 whitespace-nowrap">
+                          {fmt(customer.total_owed)}
+                        </span>
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-muted">Phone</p>
+                          <p className="mt-1 font-medium text-app break-words">{customer.phone || "—"}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-muted">Email</p>
+                          <p className="mt-1 font-medium text-app break-words">{customer.email || "No email"}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-muted">Credit Sales</p>
+                          <p className="mt-1 font-semibold text-app">{customer.credit_sales_count}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-muted">Last Sale</p>
+                          <p className="mt-1 font-medium text-app">
+                            {new Date(customer.last_credit_sale_at).toLocaleDateString("en-GB", {
+                              dateStyle: "medium",
+                            })}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-muted">Credit Amount</p>
+                          <p className="mt-1 font-semibold text-app">{fmt(customer.total_credit_amount)}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-muted">Amount Paid</p>
+                          <p className="mt-1 font-semibold text-green-700 dark:text-green-400">{fmt(customer.total_paid)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="hidden md:block w-full overflow-x-auto overflow-y-hidden rounded-2xl border border-app">
+                  <table className="w-full min-w-[920px] text-left bg-surface">
+                    <thead className="bg-app">
+                      <tr>
+                        {[
+                          "Customer",
+                          "Contact",
+                          "Credit Sales",
+                          "Credit Amount",
+                          "Amount Paid",
+                          "Amount Owed",
+                          "Last Credit Sale",
+                        ].map((heading) => (
+                          <th key={heading} className="px-5 py-4 text-xs font-bold uppercase tracking-widest text-muted">
+                            {heading}
+                          </th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-app">
+                      {creditCustomers.map((customer) => (
+                        <tr key={customer.customer_id} className="hover:bg-app/50 transition-colors">
+                          <td className="px-5 py-4">
+                            <div className="font-bold text-sm text-app">{customer.customer_name}</div>
+                            <div className="text-xs text-muted mt-0.5">
+                              ID #{customer.customer_id}
+                            </div>
+                          </td>
+                          <td className="px-5 py-4">
+                            <div className="text-sm font-medium text-app">{customer.phone || "—"}</div>
+                            <div className="text-xs text-muted mt-0.5">{customer.email || "No email"}</div>
+                          </td>
+                          <td className="px-5 py-4 text-sm font-semibold text-app">
+                            {customer.credit_sales_count}
+                          </td>
+                          <td className="px-5 py-4 text-sm font-semibold text-app">
+                            {fmt(customer.total_credit_amount)}
+                          </td>
+                          <td className="px-5 py-4 text-sm font-semibold text-green-700 dark:text-green-400">
+                            {fmt(customer.total_paid)}
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className="inline-flex rounded-lg bg-red-100 px-3 py-1 text-sm font-black text-red-700 dark:bg-red-900/40 dark:text-red-400">
+                              {fmt(customer.total_owed)}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4 text-sm font-medium text-muted">
+                            {new Date(customer.last_credit_sale_at).toLocaleDateString("en-GB", {
+                              dateStyle: "medium",
+                            })}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </Card>
 
@@ -740,26 +837,30 @@ export default function Reports() {
                     const initials = tech.name.split(" ").map((n: string) => n[0]).join("").substring(0, 2);
                     return (
                       <div key={tech.technician_id ?? i} className="p-5 rounded-2xl bg-app border border-app hover:border-primary/30 transition-colors">
-                        <div className="flex items-center justify-between mb-4">
+                        <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-sm">
                               {initials}
                             </div>
-                            <p className="text-base font-bold text-app">{tech.name}</p>
+                            <p className="text-base font-bold text-app break-words">{tech.name}</p>
                           </div>
-                          <span className="text-sm font-black px-3 py-1 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 rounded-xl">{completionRate}% Done</span>
+                          <span className="inline-flex w-fit shrink-0 text-sm font-black px-3 py-1 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 rounded-xl">
+                            {completionRate}% Done
+                          </span>
                         </div>
-                        <div className="grid grid-cols-3 gap-4 text-center">
-                          <div className="bg-surface p-3 rounded-xl shadow-sm border border-app hover:-translate-y-0.5 transition-transform">
-                            <p className="text-2xl font-display font-black text-app">{tech.total_assigned}</p>
+                        <div className="grid grid-cols-2 gap-4 text-center sm:grid-cols-3">
+                          <div className="bg-surface p-3 rounded-xl shadow-sm border border-app hover:-translate-y-0.5 transition-transform min-w-0">
+                            <p className="text-xl sm:text-2xl font-display font-black text-app tabular-nums">{tech.total_assigned}</p>
                             <p className="text-[10px] font-bold uppercase tracking-wider text-muted mt-1">Assigned</p>
                           </div>
-                          <div className="bg-surface p-3 rounded-xl shadow-sm border border-app hover:-translate-y-0.5 transition-transform">
-                            <p className="text-2xl font-display font-black text-green-600">{tech.total_completed}</p>
+                          <div className="bg-surface p-3 rounded-xl shadow-sm border border-app hover:-translate-y-0.5 transition-transform min-w-0">
+                            <p className="text-xl sm:text-2xl font-display font-black text-green-600 tabular-nums">{tech.total_completed}</p>
                             <p className="text-[10px] font-bold uppercase tracking-wider text-muted mt-1">Completed</p>
                           </div>
-                          <div className="bg-surface p-3 rounded-xl shadow-sm border border-app hover:-translate-y-0.5 transition-transform">
-                            <p className="text-2xl font-display font-black text-primary">{fmt(tech.total_revenue)}</p>
+                          <div className="col-span-2 sm:col-span-1 bg-surface p-3 rounded-xl shadow-sm border border-app hover:-translate-y-0.5 transition-transform min-w-0">
+                            <p className="font-display font-black text-primary leading-tight tracking-tight tabular-nums break-words text-[clamp(1rem,4vw,1.5rem)]">
+                              {fmt(tech.total_revenue)}
+                            </p>
                             <p className="text-[10px] font-bold uppercase tracking-wider text-muted mt-1">Revenue</p>
                           </div>
                         </div>
@@ -774,44 +875,77 @@ export default function Reports() {
             {lowStock.length > 0 && (
               <Card>
                 <SectionTitle title="⚠️ Critical Low Stock" subtitle="Items requiring immediate attention" />
-                <div className="w-full overflow-x-auto overflow-y-hidden rounded-2xl border border-app">
-                  <table className="w-full text-left bg-surface">
-                    <thead className="bg-app">
-                      <tr>
-                        {["Product Details", "In Stock", "Threshold"].map((h) => (
-                          <th key={h} className="px-5 py-4 text-xs font-bold uppercase tracking-widest text-muted">
-                            {h}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-app">
-                      {lowStock.slice(0, 10).map((item) => (
-                        <tr key={item.id} className="hover:bg-app/50 transition-colors">
-                          <td className="px-5 py-4">
-                            <div className="font-bold text-sm text-app">{item.name}</div>
+                <>
+                  <div className="space-y-3 md:hidden">
+                    {lowStock.slice(0, 10).map((item) => (
+                      <div key={item.id} className="rounded-2xl border border-app bg-surface p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="font-bold text-sm text-app break-words">{item.name}</div>
                             <div className="text-xs text-muted mt-0.5">{item.category_name || "Uncategorised"}</div>
-                          </td>
-                          <td className="px-5 py-4">
-                            <span className="text-sm font-black px-2.5 py-1 bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400 rounded-lg">
-                              {item.quantity} units
-                            </span>
-                          </td>
-                          <td className="px-5 py-4 text-sm font-semibold text-muted">
-                            {item.low_stock_threshold} units
-                          </td>
-                        </tr>
-                      ))}
-                      {lowStock.length > 10 && (
+                          </div>
+                          <span className="inline-flex whitespace-nowrap text-sm font-black px-2.5 py-1 bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400 rounded-lg">
+                            {item.quantity} units
+                          </span>
+                        </div>
+                        <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted">In Stock</p>
+                            <p className="mt-1 font-semibold text-app">{item.quantity} units</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted">Threshold</p>
+                            <p className="mt-1 font-semibold text-app">{item.low_stock_threshold} units</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {lowStock.length > 10 && (
+                      <div className="rounded-2xl border border-app bg-app px-4 py-3 text-center text-xs font-bold text-muted">
+                        + {lowStock.length - 10} more items below threshold...
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="hidden md:block w-full overflow-x-auto overflow-y-hidden rounded-2xl border border-app">
+                    <table className="w-full min-w-[460px] text-left bg-surface">
+                      <thead className="bg-app">
                         <tr>
-                          <td colSpan={3} className="px-5 py-3 text-center text-xs font-bold text-muted bg-app">
-                            + {lowStock.length - 10} more items below threshold...
-                          </td>
+                          {["Product Details", "In Stock", "Threshold"].map((h) => (
+                            <th key={h} className="px-5 py-4 text-xs font-bold uppercase tracking-widest text-muted whitespace-nowrap">
+                              {h}
+                            </th>
+                          ))}
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-app">
+                        {lowStock.slice(0, 10).map((item) => (
+                          <tr key={item.id} className="hover:bg-app/50 transition-colors">
+                            <td className="px-5 py-4">
+                              <div className="font-bold text-sm text-app">{item.name}</div>
+                              <div className="text-xs text-muted mt-0.5">{item.category_name || "Uncategorised"}</div>
+                            </td>
+                            <td className="px-5 py-4">
+                              <span className="inline-flex whitespace-nowrap text-sm font-black px-2.5 py-1 bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400 rounded-lg">
+                                {item.quantity} units
+                              </span>
+                            </td>
+                            <td className="px-5 py-4 text-sm font-semibold text-muted whitespace-nowrap">
+                              {item.low_stock_threshold} units
+                            </td>
+                          </tr>
+                        ))}
+                        {lowStock.length > 10 && (
+                          <tr>
+                            <td colSpan={3} className="px-5 py-3 text-center text-xs font-bold text-muted bg-app">
+                              + {lowStock.length - 10} more items below threshold...
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               </Card>
             )}
           </div>

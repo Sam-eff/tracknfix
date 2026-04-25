@@ -1,5 +1,5 @@
-import { Suspense, lazy } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Suspense, lazy, useEffect } from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import {
   AppShellFallback,
@@ -8,6 +8,7 @@ import {
   PublicPageFallback,
 } from "./components/LoadingFallbacks";
 import OfflineNotice from "./components/OfflineNotice";
+import { buildAppPath, rememberPostAuthRedirect } from "./utils/navigation";
 
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
@@ -82,6 +83,16 @@ function withSuspense(element: React.ReactNode, fallback: React.ReactNode) {
   return <Suspense fallback={fallback}>{element}</Suspense>;
 }
 
+function RedirectToLogin() {
+  const location = useLocation();
+
+  useEffect(() => {
+    rememberPostAuthRedirect(buildAppPath(location.pathname, location.search, location.hash));
+  }, [location.hash, location.pathname, location.search]);
+
+  return <Navigate to="/login" replace />;
+}
+
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
 
@@ -89,7 +100,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
     return <AppShellFallback />;
   }
 
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+  return isAuthenticated ? <>{children}</> : <RedirectToLogin />;
 }
 
 export default function App() {

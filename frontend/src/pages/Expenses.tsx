@@ -156,19 +156,19 @@ export default function Expenses() {
       </div>
 
       {/* Filter Bar */}
-      <div className="flex flex-wrap items-center gap-3 p-4 rounded-2xl"
+      <div className="flex flex-col gap-3 p-4 rounded-2xl sm:flex-row sm:items-center sm:justify-between"
         style={{ backgroundColor: "var(--color-surface)", border: "1px solid var(--color-border)" }}>
         
-        <div className="flex items-center gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center sm:flex-1">
           <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
-            className="px-3 py-2 text-sm rounded-lg outline-none" style={inputStyle} />
-          <span style={{ color: "var(--color-muted)" }}>to</span>
+            className="w-full min-w-0 px-3 py-2 text-sm rounded-lg outline-none" style={inputStyle} />
+          <span className="text-center text-sm font-medium" style={{ color: "var(--color-muted)" }}>to</span>
           <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
-            className="px-3 py-2 text-sm rounded-lg outline-none" style={inputStyle} />
+            className="w-full min-w-0 px-3 py-2 text-sm rounded-lg outline-none" style={inputStyle} />
         </div>
         {(dateFrom || dateTo) && (
           <button onClick={() => { setDateFrom(""); setDateTo(""); setPage(1); }}
-            className="text-sm px-3 py-2 rounded-lg" style={{ color: "var(--color-muted)" }}>
+            className="w-full text-sm px-3 py-2 rounded-lg sm:w-auto" style={{ color: "var(--color-muted)" }}>
             Clear Filters
           </button>
         )}
@@ -191,44 +191,88 @@ export default function Expenses() {
             </p>
           </div>
         ) : (
-          <div className="w-full overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b" style={{ borderColor: "var(--color-border)" }}>
-                  <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--color-muted)" }}>Date</th>
-                  <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--color-muted)" }}>Category</th>
-                  <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--color-muted)" }}>Description</th>
-                  <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--color-muted)" }}>Logged By</th>
-                  <th className="px-5 py-4 text-xs font-semibold uppercase tracking-widetext-right" style={{ color: "var(--color-muted)" }}>Amount</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200"
-                style={{ backgroundColor: "var(--color-surface)" }}>
-                {expenses.map((expense) => (
-                  <tr key={expense.id} className="transition-colors hover:bg-black/5 dark:hover:bg-white/5">
-                    <td className="px-5 py-4 text-sm" style={{ color: "var(--color-text)" }}>
-                      {new Date(expense.date).toLocaleDateString()}
-                    </td>
-                    <td className="px-5 py-4 text-sm">
-                      <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium"
-                        style={{ backgroundColor: "var(--color-bg)", border: "1px solid var(--color-border)", color: "var(--color-text)" }}>
+          <>
+            <div className="divide-y md:hidden" style={{ borderColor: "var(--color-border)" }}>
+              {expenses.map((expense) => (
+                <div key={expense.id} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold break-words" style={{ color: "var(--color-text)" }}>
+                        {expense.description || expense.category_display}
+                      </p>
+                      <p className="text-xs mt-1" style={{ color: "var(--color-muted)" }}>
+                        {new Date(expense.date).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-sm font-bold text-red-600 dark:text-red-400">
+                      -{fmt(expense.amount)}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>
+                        Category
+                      </p>
+                      <span
+                        className="mt-1 inline-flex items-center px-2 py-1 rounded-md text-xs font-medium"
+                        style={{ backgroundColor: "var(--color-bg)", border: "1px solid var(--color-border)", color: "var(--color-text)" }}
+                      >
                         {expense.category_display}
                       </span>
-                    </td>
-                    <td className="px-5 py-4 text-sm max-w-xs truncate" style={{ color: "var(--color-text)" }}>
-                      {expense.description}
-                    </td>
-                    <td className="px-5 py-4 text-sm" style={{ color: "var(--color-muted)" }}>
-                      {expense.logged_by_name}
-                    </td>
-                    <td className="px-5 py-4 text-sm font-medium text-right text-red-600 dark:text-red-400">
-                      -{fmt(expense.amount)}
-                    </td>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>
+                        Logged By
+                      </p>
+                      <p className="mt-1 font-medium break-words" style={{ color: "var(--color-text)" }}>
+                        {expense.logged_by_name}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden md:block w-full overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b" style={{ borderColor: "var(--color-border)" }}>
+                    <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--color-muted)" }}>Date</th>
+                    <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--color-muted)" }}>Category</th>
+                    <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--color-muted)" }}>Description</th>
+                    <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--color-muted)" }}>Logged By</th>
+                    <th className="px-5 py-4 text-xs font-semibold uppercase tracking-widetext-right" style={{ color: "var(--color-muted)" }}>Amount</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200"
+                  style={{ backgroundColor: "var(--color-surface)" }}>
+                  {expenses.map((expense) => (
+                    <tr key={expense.id} className="transition-colors hover:bg-black/5 dark:hover:bg-white/5">
+                      <td className="px-5 py-4 text-sm" style={{ color: "var(--color-text)" }}>
+                        {new Date(expense.date).toLocaleDateString()}
+                      </td>
+                      <td className="px-5 py-4 text-sm">
+                        <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium"
+                          style={{ backgroundColor: "var(--color-bg)", border: "1px solid var(--color-border)", color: "var(--color-text)" }}>
+                          {expense.category_display}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-sm max-w-xs truncate" style={{ color: "var(--color-text)" }}>
+                        {expense.description}
+                      </td>
+                      <td className="px-5 py-4 text-sm" style={{ color: "var(--color-muted)" }}>
+                        {expense.logged_by_name}
+                      </td>
+                      <td className="px-5 py-4 text-sm font-medium text-right text-red-600 dark:text-red-400">
+                        -{fmt(expense.amount)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 

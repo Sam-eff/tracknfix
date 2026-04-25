@@ -1023,78 +1023,164 @@ export default function Sales() {
                 <p className="text-sm" style={{ color: "var(--color-muted)" }}>No sales found</p>
               </div>
             ) : (
-              <div className="w-full overflow-x-auto">
-                <table className="w-full min-w-[700px]">
-                  <thead>
-                    <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
-                      {["Sale #", "Customer", "Items", "Total", "Profit", "Staff", "Date", ""].map((h) => (
-                        <th key={h} className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide"
-                          style={{ color: "var(--color-muted)" }}>
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sales.map((sale, i) => (
-                      <tr key={sale.id}
-                        style={{ borderBottom: i < sales.length - 1 ? "1px solid var(--color-border)" : "none" }}>
-                        <td className="px-5 py-4 text-sm font-medium" style={{ color: "var(--color-text)" }}>
-                          <div className="flex items-center gap-2">
-                            #{sale.id}
+              <>
+                <div className="divide-y md:hidden" style={{ borderColor: "var(--color-border)" }}>
+                  {sales.map((sale) => (
+                    <div key={sale.id} className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-sm font-bold" style={{ color: "var(--color-text)" }}>
+                              Sale #{sale.id}
+                            </p>
                             {sale.is_credit && (
                               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-700 border border-amber-200">
                                 CREDIT
                               </span>
                             )}
                           </div>
-                        </td>
-                        <td className="px-5 py-4 text-sm" style={{ color: "var(--color-text)" }}>
-                          {sale.customer_name}
-                        </td>
-                        <td className="px-5 py-4 text-sm" style={{ color: "var(--color-muted)" }}>
-                          {sale.items.length} item(s)
-                        </td>
-                        <td className="px-5 py-4 text-sm">
-                          <p className="font-semibold text-primary">{fmt(sale.total_amount)}</p>
+                          <p className="text-xs mt-1" style={{ color: "var(--color-muted)" }}>
+                            {new Date(sale.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-semibold text-primary">{fmt(sale.total_amount)}</p>
                           {hasOutstandingBalance(sale) && (
                             <p className="text-[11px] text-red-500 font-medium mt-0.5">
                               Bal: {fmt(sale.balance_owed)}
                             </p>
                           )}
-                        </td>
-                        <td className="px-5 py-4 text-sm font-medium text-green-600">
-                          {fmt(sale.total_profit)}
-                        </td>
-                        <td className="px-5 py-4 text-sm" style={{ color: "var(--color-muted)" }}>
-                          {sale.staff_name}
-                        </td>
-                        <td className="px-5 py-4 text-sm" style={{ color: "var(--color-muted)" }}>
-                          {new Date(sale.created_at).toLocaleDateString()}
-                        </td>
-                        <td className="px-5 py-4">
-                          <div className="flex items-center gap-2">
-                            <button onClick={() => setSelectedSale(sale)}
-                              className="text-xs px-2.5 py-1.5 rounded-lg font-medium text-primary"
-                              style={{ backgroundColor: "#eff6ff", border: "1px solid #bfdbfe" }}>
-                              View
-                            </button>
-                            {hasOutstandingBalance(sale) && (
-                              <button
-                                onClick={() => openCollectPayment(sale)}
-                                className="text-xs px-2.5 py-1.5 rounded-lg font-medium text-amber-800"
-                                style={{ backgroundColor: "#fef3c7", border: "1px solid #fcd34d" }}
-                              >
-                                Collect
-                              </button>
-                            )}
-                          </div>
-                        </td>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>
+                            Customer
+                          </p>
+                          <p className="mt-1 font-medium break-words" style={{ color: "var(--color-text)" }}>
+                            {sale.customer_name}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>
+                            Staff
+                          </p>
+                          <p className="mt-1 font-medium break-words" style={{ color: "var(--color-text)" }}>
+                            {sale.staff_name}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>
+                            Items
+                          </p>
+                          <p className="mt-1 font-medium" style={{ color: "var(--color-text)" }}>
+                            {sale.items.length} item(s)
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>
+                            Profit
+                          </p>
+                          <p className="mt-1 font-medium text-green-600">
+                            {fmt(sale.total_profit)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        <button onClick={() => setSelectedSale(sale)}
+                          className="text-xs px-3 py-2 rounded-lg font-medium text-primary"
+                          style={{ backgroundColor: "#eff6ff", border: "1px solid #bfdbfe" }}>
+                          View
+                        </button>
+                        {hasOutstandingBalance(sale) && (
+                          <button
+                            onClick={() => openCollectPayment(sale)}
+                            className="text-xs px-3 py-2 rounded-lg font-medium text-amber-800"
+                            style={{ backgroundColor: "#fef3c7", border: "1px solid #fcd34d" }}
+                          >
+                            Collect
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="hidden md:block w-full overflow-x-auto">
+                  <table className="w-full min-w-[700px]">
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
+                        {["Sale #", "Customer", "Items", "Total", "Profit", "Staff", "Date", ""].map((h) => (
+                          <th key={h} className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide"
+                            style={{ color: "var(--color-muted)" }}>
+                            {h}
+                          </th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {sales.map((sale, i) => (
+                        <tr key={sale.id}
+                          style={{ borderBottom: i < sales.length - 1 ? "1px solid var(--color-border)" : "none" }}>
+                          <td className="px-5 py-4 text-sm font-medium" style={{ color: "var(--color-text)" }}>
+                            <div className="flex items-center gap-2">
+                              #{sale.id}
+                              {sale.is_credit && (
+                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-700 border border-amber-200">
+                                  CREDIT
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-5 py-4 text-sm" style={{ color: "var(--color-text)" }}>
+                            {sale.customer_name}
+                          </td>
+                          <td className="px-5 py-4 text-sm" style={{ color: "var(--color-muted)" }}>
+                            {sale.items.length} item(s)
+                          </td>
+                          <td className="px-5 py-4 text-sm">
+                            <p className="font-semibold text-primary">{fmt(sale.total_amount)}</p>
+                            {hasOutstandingBalance(sale) && (
+                              <p className="text-[11px] text-red-500 font-medium mt-0.5">
+                                Bal: {fmt(sale.balance_owed)}
+                              </p>
+                            )}
+                          </td>
+                          <td className="px-5 py-4 text-sm font-medium text-green-600">
+                            {fmt(sale.total_profit)}
+                          </td>
+                          <td className="px-5 py-4 text-sm" style={{ color: "var(--color-muted)" }}>
+                            {sale.staff_name}
+                          </td>
+                          <td className="px-5 py-4 text-sm" style={{ color: "var(--color-muted)" }}>
+                            {new Date(sale.created_at).toLocaleDateString()}
+                          </td>
+                          <td className="px-5 py-4">
+                            <div className="flex items-center gap-2">
+                              <button onClick={() => setSelectedSale(sale)}
+                                className="text-xs px-2.5 py-1.5 rounded-lg font-medium text-primary"
+                                style={{ backgroundColor: "#eff6ff", border: "1px solid #bfdbfe" }}>
+                                View
+                              </button>
+                              {hasOutstandingBalance(sale) && (
+                                <button
+                                  onClick={() => openCollectPayment(sale)}
+                                  className="text-xs px-2.5 py-1.5 rounded-lg font-medium text-amber-800"
+                                  style={{ backgroundColor: "#fef3c7", border: "1px solid #fcd34d" }}
+                                >
+                                  Collect
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </div>
 

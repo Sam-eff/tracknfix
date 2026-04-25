@@ -7,6 +7,7 @@ import api from "../api/axios";
 import { PasswordInput } from "../components/PasswordInput";
 import { PublicLegalLinks } from "../components/PublicLegalLinks";
 import { parseApiErrors } from "../utils/http";
+import { consumePostAuthRedirect } from "../utils/navigation";
 
 export default function Register() {
   const { login } = useAuth();
@@ -50,7 +51,7 @@ export default function Register() {
     try {
       const { data } = await api.post("/auth/register/", form);
       login(data.user);
-      navigate("/");
+      navigate(consumePostAuthRedirect("/"), { replace: true });
     } catch (err: unknown) {
       const parsed = parseApiErrors(err, "Registration failed. Please try again.");
       setErrors(

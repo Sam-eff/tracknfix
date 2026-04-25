@@ -7,6 +7,7 @@ import api from "../api/axios";
 import { PasswordInput } from "../components/PasswordInput";
 import { PublicLegalLinks } from "../components/PublicLegalLinks";
 import { getApiErrorMessage } from "../utils/http";
+import { consumePostAuthRedirect } from "../utils/navigation";
 
 export default function Login() {
   const { login } = useAuth();
@@ -29,7 +30,7 @@ export default function Login() {
     try {
       const { data } = await api.post("/auth/login/", form);
       login(data.user);
-      navigate("/");
+      navigate(consumePostAuthRedirect("/"), { replace: true });
     } catch (err: unknown) {
       setError(getApiErrorMessage(err, "Invalid email or password."));
     } finally {

@@ -1,4 +1,5 @@
 import axios, { AxiosError, AxiosHeaders } from "axios";
+import { isPublicRoute, rememberCurrentPathForAuth } from "../utils/navigation";
 
 declare module "axios" {
   interface AxiosRequestConfig {
@@ -29,9 +30,6 @@ const csrfClient = axios.create({
   },
   withCredentials: true,
 });
-
-const isPublicRoute = (path: string) =>
-  ["/login", "/register", "/forgot-password", "/reset-password"].some((route) => path.startsWith(route));
 
 let refreshPromise: Promise<void> | null = null;
 let csrfPromise: Promise<void> | null = null;
@@ -123,6 +121,7 @@ api.interceptors.response.use(
         return api(original);
       } catch (refreshError) {
         if (!original.skipAuthRedirect && !isPublicRoute(window.location.pathname)) {
+          rememberCurrentPathForAuth();
           window.location.href = "/login";
         }
         return Promise.reject(refreshError);

@@ -1055,42 +1055,61 @@ export default function Settings() {
                             </p>
                           </div>
 
-                          <div className="overflow-x-auto">
-                            <table className="w-full min-w-[640px] text-left">
-                              <thead style={{ backgroundColor: "var(--color-bg)" }}>
-                                <tr>
-                                  {dataset.headers.map((header) => (
-                                    <th key={header} className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
-                                      {header}
-                                    </th>
-                                  ))}
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {dataset.preview_rows.length === 0 ? (
-                                  <tr>
-                                    <td
-                                      colSpan={Math.max(dataset.headers.length, 1)}
-                                      className="px-4 py-5 text-sm"
-                                      style={{ color: "var(--color-muted)" }}
-                                    >
-                                      No rows found in this dataset.
-                                    </td>
-                                  </tr>
-                                ) : (
-                                  dataset.preview_rows.map((row, index) => (
-                                    <tr key={`${dataset.key}-${index}`} className="border-t" style={{ borderColor: "var(--color-border)" }}>
+                          {dataset.preview_rows.length === 0 ? (
+                            <div className="px-4 py-5 text-sm" style={{ color: "var(--color-muted)" }}>
+                              No rows found in this dataset.
+                            </div>
+                          ) : (
+                            <>
+                              <div className="space-y-3 p-4 md:hidden">
+                                {dataset.preview_rows.map((row, index) => (
+                                  <div
+                                    key={`${dataset.key}-${index}`}
+                                    className="rounded-2xl border p-3"
+                                    style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-bg)" }}
+                                  >
+                                    <div className="space-y-2">
                                       {dataset.headers.map((header) => (
-                                        <td key={`${dataset.key}-${index}-${header}`} className="px-4 py-3 text-sm align-top" style={{ color: "var(--color-text)" }}>
-                                          {row[header] || "—"}
-                                        </td>
+                                        <div key={`${dataset.key}-${index}-${header}`} className="grid grid-cols-[minmax(0,110px)_1fr] gap-3 text-sm">
+                                          <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
+                                            {header}
+                                          </p>
+                                          <p className="break-words" style={{ color: "var(--color-text)" }}>
+                                            {row[header] || "—"}
+                                          </p>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+
+                              <div className="hidden md:block overflow-x-auto">
+                                <table className="w-full min-w-[640px] text-left">
+                                  <thead style={{ backgroundColor: "var(--color-bg)" }}>
+                                    <tr>
+                                      {dataset.headers.map((header) => (
+                                        <th key={header} className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
+                                          {header}
+                                        </th>
                                       ))}
                                     </tr>
-                                  ))
-                                )}
-                              </tbody>
-                            </table>
-                          </div>
+                                  </thead>
+                                  <tbody>
+                                    {dataset.preview_rows.map((row, index) => (
+                                      <tr key={`${dataset.key}-${index}`} className="border-t" style={{ borderColor: "var(--color-border)" }}>
+                                        {dataset.headers.map((header) => (
+                                          <td key={`${dataset.key}-${index}-${header}`} className="px-4 py-3 text-sm align-top" style={{ color: "var(--color-text)" }}>
+                                            {row[header] || "—"}
+                                          </td>
+                                        ))}
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </>
+                          )}
                         </div>
                       ))}
                     </div>
