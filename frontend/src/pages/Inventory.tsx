@@ -66,7 +66,7 @@ function Modal({ title, onClose, children }: {
         </div>
 
         {/* Body — scrollable */}
-        <div className="px-4 sm:px-6 py-4 sm:py-5 overflow-y-auto touch-scroll">
+        <div className="px-4 sm:px-6 pt-5 sm:pt-5 pb-4 sm:pb-5 overflow-y-auto touch-scroll">
           {children}
         </div>
       </div>
@@ -774,7 +774,7 @@ export default function Inventory() {
           title={editingProduct ? "Edit Product" : "Add Product"}
           onClose={() => { setShowAddProduct(false); setEditingProduct(null); setProductForm(emptyForm); }}
         >
-          <div className="space-y-4">
+            <div className="space-y-4">
             {/* Row 1 — name + sku */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Product Name" error={formErrors.name}>
@@ -893,7 +893,10 @@ export default function Inventory() {
               </div>
             )}
 
-            <div className="flex gap-3 pt-2">
+            <div
+              className="flex gap-3 pt-3 pb-1"
+              style={{ paddingBottom: "max(0.25rem, env(safe-area-inset-bottom))" }}
+            >
               <button
                 onClick={() => { setShowAddProduct(false); setEditingProduct(null); setProductForm(emptyForm); }}
                 className="flex-1 py-2.5 rounded-xl text-sm font-medium"
@@ -923,7 +926,10 @@ export default function Inventory() {
                 onChange={(e) => setCategoryName(e.target.value)}
                 placeholder="e.g. Charger, Screen, Battery" />
             </Field>
-            <div className="flex gap-3 pt-2">
+            <div
+              className="flex gap-3 pt-3 pb-1"
+              style={{ paddingBottom: "max(0.25rem, env(safe-area-inset-bottom))" }}
+            >
               <button onClick={() => setShowAddCategory(false)}
                 className="flex-1 py-2.5 rounded-xl text-sm font-medium"
                 style={{
@@ -980,7 +986,10 @@ export default function Inventory() {
                 placeholder="Optional note" />
             </Field>
 
-            <div className="flex gap-3 pt-2">
+            <div
+              className="flex gap-3 pt-3 pb-1"
+              style={{ paddingBottom: "max(0.25rem, env(safe-area-inset-bottom))" }}
+            >
               <button onClick={() => setShowAdjustStock(false)}
                 className="flex-1 py-2.5 rounded-xl text-sm font-medium"
                 style={{

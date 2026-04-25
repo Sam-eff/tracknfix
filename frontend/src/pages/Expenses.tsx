@@ -13,6 +13,42 @@ const inputStyle = {
   color: "var(--color-text)",
 };
 
+function DateInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>
+        {label}
+      </span>
+      <div className="relative">
+        <input
+          type="date"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full min-w-0 px-3 pr-10 py-2.5 text-sm rounded-lg outline-none"
+          style={inputStyle}
+        />
+        <svg
+          className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2"
+          style={{ color: "var(--color-muted)" }}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10m-13 9h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v11a2 2 0 002 2z" />
+        </svg>
+      </div>
+    </label>
+  );
+}
+
 const fmt = (n: number | string) =>
   `₦${Number(n).toLocaleString("en-NG", { minimumFractionDigits: 2 })}`;
 
@@ -159,12 +195,24 @@ export default function Expenses() {
       <div className="flex flex-col gap-3 p-4 rounded-2xl sm:flex-row sm:items-center sm:justify-between"
         style={{ backgroundColor: "var(--color-surface)", border: "1px solid var(--color-border)" }}>
         
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center sm:flex-1">
-          <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
-            className="w-full min-w-0 px-3 py-2 text-sm rounded-lg outline-none" style={inputStyle} />
-          <span className="text-center text-sm font-medium" style={{ color: "var(--color-muted)" }}>to</span>
-          <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
-            className="w-full min-w-0 px-3 py-2 text-sm rounded-lg outline-none" style={inputStyle} />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-end sm:flex-1">
+          <DateInput
+            label="From"
+            value={dateFrom}
+            onChange={(value) => {
+              setDateFrom(value);
+              setPage(1);
+            }}
+          />
+          <span className="hidden sm:block text-center text-sm font-medium pb-2.5" style={{ color: "var(--color-muted)" }}>to</span>
+          <DateInput
+            label="To"
+            value={dateTo}
+            onChange={(value) => {
+              setDateTo(value);
+              setPage(1);
+            }}
+          />
         </div>
         {(dateFrom || dateTo) && (
           <button onClick={() => { setDateFrom(""); setDateTo(""); setPage(1); }}
